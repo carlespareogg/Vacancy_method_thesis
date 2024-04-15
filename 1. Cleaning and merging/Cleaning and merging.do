@@ -21,7 +21,7 @@ gen idvivenda = _n
 save "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG Economia\Habitatge\GitHub\TFG-Eco\1. Cleaning and merging\2. Intermediate datasets\INE\vivenda_año_construccion.dta", replace
 
 clear
-//* Prepare vacancy dataset having premerged INE and EUV datasets
+//* Prepare vacancy dataset having premerged INE and EUV datasets (Capitals and "Porcentaje de viviendas familiares no principales por municipios de 10.001 a 100.000 habitantes. 2011-2021", provided by the Departamento de Planificación Territorial, Vivienda y Transportes of the Basque Country)
 import excel "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG Economia\Habitatge\GitHub\TFG-Eco\1. Cleaning and merging\2. Intermediate datasets\ine_euv_merge.xlsx", sheet("Hoja1") firstrow
 gen idvivenda1 = _n
 save "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG Economia\Habitatge\GitHub\TFG-Eco\1. Cleaning and merging\2. Intermediate datasets\ine_euv_merge.dta", replace
