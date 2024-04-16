@@ -11,6 +11,13 @@ gen idpoblacio = _n
 save "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG Economia\Habitatge\GitHub\TFG-Eco\1. Cleaning and merging\2. Intermediate datasets\INE\vivienda_2011_2021_nonacionalitat.dta", replace
 
 clear
+//* Prepare 2013-2019 population dataset having premerged manually every year
+import excel "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG Economia\Habitatge\GitHub\TFG-Eco\1. Cleaning and merging\2. Intermediate datasets\INE\poblacion_2013_2019.xlsx", sheet("Hoja1") firstrow
+gen idpoblacio = _n
+save "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG Economia\Habitatge\GitHub\TFG-Eco\1. Cleaning and merging\2. Intermediate datasets\INE\poblacion_2013_2019.dta", replace
+
+
+clear
 //*Prepare construction dataset to merge with INE and EUV vacancy datasets
 import excel "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG Economia\Habitatge\GitHub\TFG-Eco\1. Cleaning and merging\2. Intermediate datasets\INE\vivienda_año_construccion.xlsx", sheet("Hoja1") firstrow
 gen año = 2021
@@ -27,11 +34,25 @@ gen idvivenda1 = _n
 save "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG Economia\Habitatge\GitHub\TFG-Eco\1. Cleaning and merging\2. Intermediate datasets\ine_euv_merge.dta", replace
 
 reclink codi_regio nom_regio año using "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG Economia\Habitatge\GitHub\TFG-Eco\1. Cleaning and merging\2. Intermediate datasets\INE\vivenda_año_construccion.dta", idmaster(idvivenda1) idusing(idvivenda) minscore(0.95) required (año) gen(vivenda_score)
+////Non-merged observations are the ones which correspond to years others than 2011 or 2021 or provinces
 drop _merge
-//save "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG Economia\Habitatge\GitHub\TFG-Eco\1. Cleaning and merging\2. Intermediate datasets\ine_euv_vivienda_poblacion.dta", replace
-//* Fuzzymerge
 
+//*merge with 2011 to 2021 population data from INE, which includes mobility variables with a 90% merging statistical score
 reclink codi_regio nom_regio año using "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG Economia\Habitatge\GitHub\TFG-Eco\1. Cleaning and merging\2. Intermediate datasets\INE\vivienda_2011_2021_nonacionalitat.dta", idmaster(idvivenda1) idusing(idpoblacio) required(año) minscore(0.9) gen(poblacio_score)
+////Non-merged observations are the ones which correspond to years others than 2011 or 2021 or provinces
+drop _merge
+drop idpoblacio
+
+
+//*merge with 2013 to 2019 population data from INE with a 90% merging statistical score
+reclink nom_regio año using "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG Economia\Habitatge\GitHub\TFG-Eco\1. Cleaning and merging\2. Intermediate datasets\INE\poblacion_2013_2019.dta", idmaster(idvivenda1) idusing(idpoblacio) required(año) minscore(0.9) gen(poblacio_score1)
+
+replace viviendas_vacias = . if viviendas_vacias == 0
+rename PROVINCIA provincia_euv
+drop CPRO
+drop CMUN
+drop I
+
 
 //////////////////////IN CONSTRUCTION
 /* Clean
