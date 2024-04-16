@@ -73,7 +73,7 @@ tabulate nivel_region
 /////////////////////////7 IN CONSTRUCTION
 */
 
-* Canviar nom dels labels per les variables mobilitat*
+* Canviar nom dels labels per les variables mobilitat general, homes i dones*
 
 label variable a_misma_vivienda "Misma vivienda"
 
@@ -87,12 +87,46 @@ label variable a_otra_ccaa "Otra comunidad"
 
 label variable a_venidodeestranj "Residía en el extranjero"
 
-label variable a_nores2011_siempreesp "No consta la residencia hace diez años, pero siempre ha residid
-> o en España"
+label variable a_nores2011_siempreesp "No consta la residencia hace diez años, pero siempre ha residido en España"
 
-label variable a_nores2011_nosiempreesp "No consta la residencia hace diez años, y no siempre ha resid
-> ido en España"
+label variable a_nores2011_nosiempreesp "No consta la residencia hace diez años, y no siempre ha residido en España"
 
 label variable a_nacido "No había nacido"
+
+label variable a_misma_vivienda_h "Misma vivienda Hombre"
+
+label variable a_dist_viv_mismo_muni_h "Distinta vivienda del mismo municipio Hombre"
+
+label variable a_dist_muni_misma_prov_h "Distinto municipio de la misma provincia Hombre"
+
+label variable a_dist_prov_misma_ccaa_h "Distinta provincia de la misma comunidad Hombre"
+ 
+label variable a_otra_ccaa_h "Otra comunidad Hombre"
+
+label variable a_venidodeestranj_h "Residía en el extranjero Hombre"
+
+label variable a_nores2011_siempreesp_h "No consta la residencia hace diez años, pero siempre ha residido en España Hombre"
+
+label variable a_nores2011_nosiempreesp_h "No consta la residencia hace diez años, y no siempre ha residido en España Hombre"
+
+label variable a_nacido_h "No había nacido Hombre"
+
+label variable a_misma_vivienda_m "Misma vivienda Mujer"
+
+label variable a_dist_viv_mismo_muni_m "Distinta vivienda del mismo municipio Mujer"
+
+label variable a_dist_muni_misma_prov_m "Distinto municipio de la misma provincia Mujer"
+
+label variable a_dist_prov_misma_ccaa_m "Distinta provincia de la misma comunidad Mujer"
+ 
+label variable a_otra_ccaa_m "Otra comunidad Mujer"
+
+label variable a_venidodeestranj_m "Residía en el extranjero Mujer"
+
+label variable a_nores2011_siempreesp_m "No consta la residencia hace diez años, pero siempre ha residido en España Mujer"
+
+label variable a_nores2011_nosiempreesp_m "No consta la residencia hace diez años, y no siempre ha residido en España Mujer"
+
+label variable a_nacido_m "No había nacido Mujer"
 
 save "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG Economia\Habitatge\GitHub\TFG-Eco\1. Cleaning and merging\3. Clean data\ine_euv_vivienda_poblacion", replace
