@@ -33,6 +33,17 @@ drop _merge
 
 reclink codi_regio nom_regio año using "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG Economia\Habitatge\GitHub\TFG-Eco\1. Cleaning and merging\2. Intermediate datasets\INE\vivienda_2011_2021_nonacionalitat.dta", idmaster(idvivenda1) idusing(idpoblacio) required(año) minscore(0.9) gen(poblacio_score)
 
+drop vivenda_score
+drop poblacio_score
+drop idpoblacio
+drop idvivenda1
+drop idvivenda
+drop ciudadanía
+drop _merge
+drop Ucodi_regio
+drop Unom_regio
+drop Uaño
+
 //////////////////////IN CONSTRUCTION
 /* Clean
 **Generar nivel de territorialidad
