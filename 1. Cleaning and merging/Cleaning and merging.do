@@ -72,4 +72,27 @@ foreach comunidad in `comunidades_autonomas' {
 tabulate nivel_region
 /////////////////////////7 IN CONSTRUCTION
 */
+
+* Canviar nom dels labels per les variables mobilitat*
+
+label variable a_misma_vivienda "Misma vivienda"
+
+label variable a_dist_viv_mismo_muni "Distinta vivienda del mismo municipio"
+
+label variable a_dist_muni_misma_prov "Distinto municipio de la misma provincia"
+
+label variable a_dist_prov_misma_ccaa "Distinta provincia de la misma comunidad"
+
+label variable a_otra_ccaa "Otra comunidad"
+
+label variable a_venidodeestranj "Residía en el extranjero"
+
+label variable a_nores2011_siempreesp "No consta la residencia hace diez años, pero siempre ha residid
+> o en España"
+
+label variable a_nores2011_nosiempreesp "No consta la residencia hace diez años, y no siempre ha resid
+> ido en España"
+
+label variable a_nacido "No había nacido"
+
 save "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG Economia\Habitatge\GitHub\TFG-Eco\1. Cleaning and merging\3. Clean data\ine_euv_vivienda_poblacion", replace
