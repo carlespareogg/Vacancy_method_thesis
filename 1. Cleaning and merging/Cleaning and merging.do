@@ -18,14 +18,15 @@ gen idpoblacio = _n
 gen codi_regio = CPRO + CMUN
 destring codi_regio, replace
 drop if año==.
+gen registro == "ine"
 save "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG Economia\Habitatge\GitHub\TFG-Eco\1. Cleaning and merging\2. Intermediate datasets\INE\poblacion_2011_2019.dta", replace
 
 
 clear
 //*Prepare construction dataset to merge with INE and EUV vacancy datasets
 import excel "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG Economia\Habitatge\GitHub\TFG-Eco\1. Cleaning and merging\2. Intermediate datasets\INE\vivienda_año_construccion.xlsx", sheet("Hoja1") firstrow
-/*gen año = 2021
-expand 2, gen(new_id)
+gen año = 2021
+/*expand 2, gen(new_id)
 replace año = 2011 if new_id == 1
 drop new_id
 */
@@ -49,11 +50,15 @@ reclink codi_regio nom_regio año using "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG E
 drop _merge
 drop idpoblacio
 
-//save "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG Economia\Habitatge\GitHub\TFG-Eco\1. Cleaning and merging\2. Intermediate datasets\vivienda_dropaftemerge.dta", replace
+save "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG Economia\Habitatge\GitHub\TFG-Eco\1. Cleaning and merging\2. Intermediate datasets\vivienda_dropaftemerge.dta", replace
 
-//use "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG Economia\Habitatge\GitHub\TFG-Eco\1. Cleaning and merging\2. Intermediate datasets\vivienda_dropaftemerge.dta"
+use "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG Economia\Habitatge\GitHub\TFG-Eco\1. Cleaning and merging\2. Intermediate datasets\vivienda_dropaftemerge.dta"
 //*merge with 2011 to 2019 population data from INE with a 90% merging statistical score
+
+//AQUÍ HI HA UN PROBLEMA AMB LES DADES QUE NO TENEN REGISTRE, 
 merge m:1 codi_regio año using "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG Economia\Habitatge\GitHub\TFG-Eco\1. Cleaning and merging\2. Intermediate datasets\INE\poblacion_2011_2019.dta", update
+
+drop if (año == 2011 | año == 2013 | año == 2015 | año == 2017 | año == 2019) & missing(viviendas_totales)
 
 /*sort codi_regio año
 * Asignar los valores de población de registros "euv" a las observaciones con el mismo año y nom_regio pero con registro "ine"
