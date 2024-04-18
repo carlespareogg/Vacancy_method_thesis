@@ -8,13 +8,17 @@ Clean
 set max off
 
 //* Set Current Directory path
-cd "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG Economia\Habitatge\GitHub\TFG-Eco\"
+cd "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG Economia\Habitatge\GitHub\TFG-Eco"
 
 
-//*Macros
-global rawdata "1. Cleaning and merging\1. Raw data"
-global intdata "1. Cleaning and merging\2. Intermediate datasets" 
-global data "1. Cleaning and merging\3. Clean data"
+//*Macros. To run the file, change path to desired directory
+global path "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG Economia\Habitatge\GitHub\TFG-Eco"
+global interdata "$path\1. Cleaning and merging\2. Intermediate datasets"
+global ineinput "$path\1. Cleaning and merging\2. Intermediate datasets\INE\input"
+global ineoutput "$path\1. Cleaning and merging\2. Intermediate datasets\INE\output" 
+global interdata "$path\1. Cleaning and merging\2. Intermediate datasets"
+global dataoutput "$path\1. Cleaning and merging\3. Clean data"
+global data "$path\1. Cleaning and merging\3. Clean data"
 
 
 //* Clean data
