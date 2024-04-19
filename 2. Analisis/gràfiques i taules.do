@@ -32,12 +32,12 @@ la variable	vac_pop			"vacancy controlado por población"
 	
 sum viviendas_vacias if año==2021 & registro=="ine" & codi_regio >52
 
-sum vac_pop & codi_regio >52
+sum vac_pop if codi_regio >52
 sum vac_pop if año==2011 & codi_regio >52
 sum vac_pop if año==2021 & codi_regio >52
 
 
-sum vac_vtot & codi_regio >52
+sum vac_vtot if codi_regio >52
 sum vac_vtot if año==2011 & codi_regio >52
 sum vac_vtot if año==2021 & codi_regio >52
 
@@ -48,6 +48,15 @@ graph dot (mean) vac_vtot vac_pop if año == 2011|2021 & codi_regio >52, over(a�
 
 
 ////Agafant només el País Vasc, comparar dades de INE i EUV 
-graph dot (mean) vac_vtot vac_pop if año == 2011|2021 & codi_regio >52 & (registro == "ine" & ((año == 2011 & codi_regio == codi_regio[_n-1]) | (año == 2021 & codi_regio == codi_regio[_n-2]))) | registro == "euv", over(año) over(registro)
+//graph dot (mean) vac_vtot vac_pop if año == 2011|2021 & codi_regio >52 & (registro == "ine" & ((año == 2011 & codi_regio == codi_regio[_n-1]) | (año == 2021 & codi_regio == codi_regio[_n-2]))) | registro == "euv", over(año) over(registro)
 
-graph dot (mean) vac_11_21 viv_11_21 if año == 2011|2021 & codi_regio >52 & (registro == "ine" & ((año == 2011 & codi_regio == codi_regio[_n-1]) | (año == 2021 & codi_regio == codi_regio[_n-2]))) | registro == "euv", over(año) over(registro)
+graph dot (mean) vac_vtot vac_pop if codi_regio >= 1000 & codi_regio < 1999 | codi_regio >= 20000 & codi_regio < 20999 | codi_regio >= 48000 & codi_regio < 48999, over(año) over(registro)
+
+
+//graph dot (mean) vac_11_21 viv_11_21 if año == 2011|2021 & codi_regio >52 & (registro == "ine" & ((año == 2011 & codi_regio == codi_regio[_n-1]) | (año == 2021 & codi_regio == codi_regio[_n-2]))) | registro == "euv", over(año) over(registro)
+
+
+
+
+
+
