@@ -5,7 +5,7 @@
 
 
 clear 
-set max off
+//set max off
 
 //* Set Current Directory path
 cd "C:\Users\hp\OneDrive\UPF\6. Sisè\TFG Economia\Habitatge\GitHub\TFG-Eco"
