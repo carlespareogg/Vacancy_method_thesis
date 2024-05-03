@@ -19,6 +19,7 @@ global ineoutput "$path\1. Cleaning and merging\2. Intermediate datasets\INE\out
 global interdata "$path\1. Cleaning and merging\2. Intermediate datasets"
 global dataoutput "$path\1. Cleaning and merging\3. Clean data"
 global data "$path\1. Cleaning and merging\3. Clean data"
+global figures "$path\2. Analisis\Figures"
 
 
 //* Clean data
