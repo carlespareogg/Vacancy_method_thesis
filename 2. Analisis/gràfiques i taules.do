@@ -46,12 +46,45 @@ sum vac_vtot if año==2021 & codi_regio >52
 graph dot (mean) vac_vtot vac_pop if año == 2011|2021 & codi_regio >52, over(año)
 graph dot (mean) vac_vtot vac_pop if año == 2011|2021 & codi_regio >52, over(año) over(registro)
 
+//Per tamany de població
+graph dot (mean) vac_vtot vac_pop if poblacion < 10000 & (año == 2011 | año == 2021) & (codi_regio >52) & registro == "ine", over(año) over(registro) title(población < 10000) name(graph1, replace)
+
+graph dot (mean) vac_vtot vac_pop if (poblacion > 10000 & poblacion < 25000) & (año == 2011 | año == 2021) & (codi_regio >52), over(año) over(registro) title(10000 < población < 25000) name(graph2, replace)
+
+graph dot (mean) vac_vtot vac_pop if (poblacion > 25000 & poblacion < 100000) & (año == 2011 | año == 2021) & (codi_regio >52), over(año) over(registro) title(25000 < población < 100000) name(graph3, replace)
+
+graph dot (mean) vac_vtot vac_pop if (poblacion > 100000 & poblacion < 250000) & (año == 2011 | año == 2021) & (codi_regio >52), over(año) over(registro) title(100000 < población < 250000) name(graph4, replace)
+
+
+graph dot (mean) vac_vtot vac_pop if (poblacion > 250000 & poblacion < 500000) & (año == 2011 | año == 2021) & (codi_regio >52), over(año) over(registro) title(250000 < población < 500000) name(graph5, replace)
+
+
+graph dot (mean) vac_vtot vac_pop if poblacion > 500000 & (año == 2011 | año == 2021) & (codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999") & registro == "ine", over(año) over(registro) title(500000 < población) name(graph6, replace)
+
+graph combine graph1 graph2 graph3 graph4 graph5 graph6, rows(3) cols(2)
+
+graph export "$figures\GridPobl_ine-euv.png", replace
+
+//Per tamany de població només agafant País Basc 
+
+graph dot (mean) vac_vtot vac_pop if ((codi_regio >= 1000 & codi_regio < 1999) | (codi_regio >= 20000 & codi_regio < 20999) | (codi_regio >= 48000 & codi_regio < 48999)) & (año == 2011 | año == 2021) & (poblacion < 10000), over(año) over(registro) title(población < 10000) name(graph1, replace)
+
+graph dot (mean) vac_vtot vac_pop if ((codi_regio >= 1000 & codi_regio < 1999) | (codi_regio >= 20000 & codi_regio < 20999) | (codi_regio >= 48000 & codi_regio < 48999)) & (año == 2011 | año == 2021) & (poblacion > 10000 & poblacion < 25000), over(año) over(registro) title(10000 < población < 25000) name(graph2, replace)
+
+graph dot (mean) vac_vtot vac_pop if ((codi_regio >= 1000 & codi_regio < 1999) | (codi_regio >= 20000 & codi_regio < 20999) | (codi_regio >= 48000 & codi_regio < 48999)) & (año == 2011 | año == 2021) & (poblacion > 25000 & poblacion < 100000), over(año) over(registro) title(25000 < población < 100000) name(graph3, replace)
+
+graph dot (mean) vac_vtot vac_pop if ((codi_regio >= 1000 & codi_regio < 1999) | (codi_regio >= 20000 & codi_regio < 20999) | (codi_regio >= 48000 & codi_regio < 48999)) & (año == 2011 | año == 2021) & (poblacion > 100000), over(año) over(registro) title(poblacion > 100000) name(graph4, replace)
+
+graph combine graph1 graph2 graph3 graph4, rows(2) cols	(2)
+
+graph export "$figures\GridPoblPB_ine-euv.png", replace
 
 ////Agafant només el País Vasc, comparar dades de INE i EUV 
 //graph dot (mean) vac_vtot vac_pop if año == 2011|2021 & codi_regio >52 & (registro == "ine" & ((año == 2011 & codi_regio == codi_regio[_n-1]) | (año == 2021 & codi_regio == codi_regio[_n-2]))) | registro == "euv", over(año) over(registro)
 
 graph dot (mean) vac_vtot vac_pop if codi_regio >= 1000 & codi_regio < 1999 | codi_regio >= 20000 & codi_regio < 20999 | codi_regio >= 48000 & codi_regio < 48999, over(año) over(registro)
 
+graph export "$figures\PB_ine-euv.png", replace
 
 //graph dot (mean) vac_11_21 viv_11_21 if año == 2011|2021 & codi_regio >52 & (registro == "ine" & ((año == 2011 & codi_regio == codi_regio[_n-1]) | (año == 2021 & codi_regio == codi_regio[_n-2]))) | registro == "euv", over(año) over(registro)
 
