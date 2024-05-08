@@ -153,4 +153,83 @@ label variable a_nores2011_siempreesp_m "No consta la residencia hace diez años
 label variable a_nores2011_nosiempreesp_m "No consta la residencia hace diez años, y no siempre ha residido en España Mujer"
 label variable a_nacido_m "No había nacido Mujer"
 
+*Crear variable provincia i CCAA*
+
+gen provincia = ""
+ 
+ replace provincia= "Álava" if codi_regio >= 1000 & codi_regio <= 1999
+ replace provincia= "Albacete" if codi_regio >= 2000 & codi_regio <= 2999
+ replace provincia= "Almeria" if codi_regio >= 3000 & codi_regio <= 3999
+ replace provincia= "Alicante" if codi_regio >= 4000 & codi_regio <= 4999
+ replace provincia= "Ávila" if codi_regio >= 5000 & codi_regio <= 5999
+ replace provincia= "Badajoz" if codi_regio >= 6000 & codi_regio <= 6999
+ replace provincia= "Illes Balears" if codi_regio >= 7000 & codi_regio <= 7999
+ replace provincia= "Barcelona" if codi_regio >= 8000 & codi_regio <= 8999
+ replace provincia= "Burgos" if codi_regio >= 9000 & codi_regio <= 9999
+ replace provincia= "Burgos" if codi_regio >= 10000 & codi_regio <= 10999
+ replace provincia= "Cádiz" if codi_regio >= 11000 & codi_regio <= 11999
+ replace provincia= "Castelló" if codi_regio >= 12000 & codi_regio <= 12999
+ replace provincia= "Ciudad Real" if codi_regio >= 13000 & codi_regio <= 13999
+ replace provincia= "Cordoba" if codi_regio >= 14000 & codi_regio <= 14999
+ replace provincia= "A Coruña" if codi_regio >= 15000 & codi_regio <= 15999
+ replace provincia= "Cuenca" if codi_regio >= 16000 & codi_regio <= 16999
+ replace provincia= "Girona" if codi_regio >= 17000 & codi_regio <= 17999
+ replace provincia= "Granada" if codi_regio >= 18000 & codi_regio <= 18999
+ replace provincia= "Guadalajara" if codi_regio >= 19000 & codi_regio <= 19999
+ replace provincia= "Gipuzkoa" if codi_regio >= 20000 & codi_regio <= 20999
+ replace provincia= "Huelva" if codi_regio >= 21000 & codi_regio <= 21999
+ replace provincia= "Huesca" if codi_regio >= 22000 & codi_regio <= 22999
+ replace provincia= "Jaén" if codi_regio >= 23000 & codi_regio <= 23999
+ replace provincia= "Leon" if codi_regio >= 24000 & codi_regio <= 24999
+ replace provincia= "Lleida" if codi_regio >= 25000 & codi_regio <= 25999
+ replace provincia= "La Rioja" if codi_regio >= 26000 & codi_regio <= 26999
+ replace provincia= "Lugo" if codi_regio >= 27000 & codi_regio <= 27999
+ replace provincia= "Madrid" if codi_regio >= 28000 & codi_regio <= 28999
+ replace provincia= "Málaga" if codi_regio >= 29000 & codi_regio <= 29999
+ replace provincia= "Murcia" if codi_regio >= 30000 & codi_regio <= 30999
+ replace provincia= "Navarra" if codi_regio >= 31000 & codi_regio <= 31999
+ replace provincia= "Ourense" if codi_regio >= 32000 & codi_regio <= 32999
+ replace provincia= "Asturias" if codi_regio >= 33000 & codi_regio <= 33999
+ replace provincia= "Palencia" if codi_regio >= 34000 & codi_regio <= 34999
+ replace provincia= "Tenerife" if codi_regio >= 35000 & codi_regio <= 35999
+  replace provincia= "Salamanca" if codi_regio >= 37000 & codi_regio <= 37999
+ replace provincia= "Pontevedra" if codi_regio >= 36000 & codi_regio <= 36999
+ replace provincia= "Las Palmas" if codi_regio >= 38000 & codi_regio <= 38999
+ replace provincia= "Cantabria" if codi_regio >= 39000 & codi_regio <= 39999
+ replace provincia= "Segovia" if codi_regio >= 40000 & codi_regio <= 40999
+ replace provincia= "Sevilla" if codi_regio >= 41000 & codi_regio <= 41999
+ replace provincia= "Soria" if codi_regio >= 42000 & codi_regio <= 42999
+ replace provincia= "Tarragona" if codi_regio >= 43000 & codi_regio <= 43999
+ replace provincia= "Tarragona" if codi_regio >= 44000 & codi_regio <= 44999
+ replace provincia= "Toledo" if codi_regio >= 45000 & codi_regio <= 45999
+ replace provincia= "Valencia" if codi_regio >= 46000 & codi_regio <= 46999
+replace provincia= "Valladolid" if codi_regio >= 47000 & codi_regio <= 47999
+replace provincia= "Bizkaia" if codi_regio >= 48000 & codi_regio <= 48999
+replace provincia= "Zamora" if codi_regio >= 49000 & codi_regio <= 49999
+replace provincia= "Zaragoza" if codi_regio >= 50000 & codi_regio <= 50999
+replace provincia= "Ceuta" if codi_regio >= 51000 & codi_regio <= 51999
+replace provincia= "Melilla" if codi_regio >= 52000 & codi_regio <= 52999 
+
+gen com_autonoma = ""
+
+replace comunidad_autonoma = "Cataluña" if provincia == "Barcelona" | provincia == "Girona" | provincia == "Lleida" | provincia == "Tarragona"
+replace comunidad_autonoma = "Aragón" if provincia == "Huesca" | provincia == "Teruel" | provincia == "Zaragoza" 
+replace comunidad_autonoma = "CyL" if provincia == "Salamanca" | provincia == "Ávila" | provincia == "Burgos" | provincia == "Leon" | provincia == "Palencia" | provincia == "Valladolid" | provincia == "Soria" | provincia == "Segovia" | provincia == "Zamora" 
+replace comunidad_autonoma = "CyM" if provincia == "Albacete" | provincia == "Ciudad Real"| provincia == "Cuenca"| provincia == "Guadalajara" |  provincia == "Toledo" 
+replace comunidad_autonoma = "Cantabria" if provincia == "Cantabria" 
+replace comunidad_autonoma = "Canarias" if provincia == "Tenerife" | provincia == "Las Palmas"
+replace comunidad_autonoma = "País Valencià" if provincia == "Valencia" | provincia == "Alicante" | provincia == "Castelló" 
+replace comunidad_autonoma = "Euskadi" if provincia == "Bizkaia" | provincia == "Gipuzkoa" | provincia == "Álava" 
+replace comunidad_autonoma = "Navarra" if provincia == "Navarra" 
+replace comunidad_autonoma = "Murcia" if provincia == "Murcia" 
+replace comunidad_autonoma = "Illes Balears" if provincia == "Illes Balears" 
+replace comunidad_autonoma = "Extremadura" if provincia == "Badajoz" | provincia == "Caceres"
+replace comunidad_autonoma = "Galicia" if provincia == "A Coruña" | provincia == "Lugo" | provincia == "Ourense" | provincia == "Pontevedra"
+replace comunidad_autonoma = "Asturias" if provincia == "Asturias" 
+replace comunidad_autonoma = "Madrid" if provincia == "Madrid" 
+replace comunidad_autonoma = "Andalucia" if provincia == "Almeria" | provincia == "Cádiz" | provincia == "Cordoba" | provincia == "Granada" | provincia == "Huelva" | provincia == "Jaén" | provincia == "Málaga" | provincia == "Sevilla" 
+replace comunidad_autonoma = "Ceuta" if provincia == "Ceuta"
+replace comunidad_autonoma = "Melilla" if provincia == "Melilla"
+replace comunidad_autonoma = "La Rioja" if provincia == "La Rioja"
+
 save "$data\ine_euv_vivienda_poblacion.dta", replace
