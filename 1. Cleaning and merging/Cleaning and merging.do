@@ -155,7 +155,9 @@ label variable a_nacido_m "No había nacido Mujer"
 
 *Crear variable provincia i CCAA*
 
-gen provincia = ""
+//gen provincia = ""
+//variable provincia already defined
+
  
  replace provincia= "Álava" if codi_regio >= 1000 & codi_regio <= 1999
  replace provincia= "Albacete" if codi_regio >= 2000 & codi_regio <= 2999
@@ -212,24 +214,24 @@ replace provincia= "Melilla" if codi_regio >= 52000 & codi_regio <= 52999
 
 gen com_autonoma = ""
 
-replace comunidad_autonoma = "Cataluña" if provincia == "Barcelona" | provincia == "Girona" | provincia == "Lleida" | provincia == "Tarragona"
-replace comunidad_autonoma = "Aragón" if provincia == "Huesca" | provincia == "Teruel" | provincia == "Zaragoza" 
-replace comunidad_autonoma = "CyL" if provincia == "Salamanca" | provincia == "Ávila" | provincia == "Burgos" | provincia == "Leon" | provincia == "Palencia" | provincia == "Valladolid" | provincia == "Soria" | provincia == "Segovia" | provincia == "Zamora" 
-replace comunidad_autonoma = "CyM" if provincia == "Albacete" | provincia == "Ciudad Real"| provincia == "Cuenca"| provincia == "Guadalajara" |  provincia == "Toledo" 
-replace comunidad_autonoma = "Cantabria" if provincia == "Cantabria" 
-replace comunidad_autonoma = "Canarias" if provincia == "Tenerife" | provincia == "Las Palmas"
-replace comunidad_autonoma = "País Valencià" if provincia == "Valencia" | provincia == "Alicante" | provincia == "Castelló" 
-replace comunidad_autonoma = "Euskadi" if provincia == "Bizkaia" | provincia == "Gipuzkoa" | provincia == "Álava" 
-replace comunidad_autonoma = "Navarra" if provincia == "Navarra" 
-replace comunidad_autonoma = "Murcia" if provincia == "Murcia" 
-replace comunidad_autonoma = "Illes Balears" if provincia == "Illes Balears" 
-replace comunidad_autonoma = "Extremadura" if provincia == "Badajoz" | provincia == "Caceres"
-replace comunidad_autonoma = "Galicia" if provincia == "A Coruña" | provincia == "Lugo" | provincia == "Ourense" | provincia == "Pontevedra"
-replace comunidad_autonoma = "Asturias" if provincia == "Asturias" 
-replace comunidad_autonoma = "Madrid" if provincia == "Madrid" 
-replace comunidad_autonoma = "Andalucia" if provincia == "Almeria" | provincia == "Cádiz" | provincia == "Cordoba" | provincia == "Granada" | provincia == "Huelva" | provincia == "Jaén" | provincia == "Málaga" | provincia == "Sevilla" 
-replace comunidad_autonoma = "Ceuta" if provincia == "Ceuta"
-replace comunidad_autonoma = "Melilla" if provincia == "Melilla"
-replace comunidad_autonoma = "La Rioja" if provincia == "La Rioja"
+replace com_autonoma = "Cataluña" if provincia == "Barcelona" | provincia == "Girona" | provincia == "Lleida" | provincia == "Tarragona"
+replace com_autonoma = "Aragón" if provincia == "Huesca" | provincia == "Teruel" | provincia == "Zaragoza" 
+replace com_autonoma = "CyL" if provincia == "Salamanca" | provincia == "Ávila" | provincia == "Burgos" | provincia == "Leon" | provincia == "Palencia" | provincia == "Valladolid" | provincia == "Soria" | provincia == "Segovia" | provincia == "Zamora" 
+replace com_autonoma = "CyM" if provincia == "Albacete" | provincia == "Ciudad Real"| provincia == "Cuenca"| provincia == "Guadalajara" |  provincia == "Toledo" 
+replace com_autonoma = "Cantabria" if provincia == "Cantabria" 
+replace com_autonoma = "Canarias" if provincia == "Tenerife" | provincia == "Las Palmas"
+replace com_autonoma = "País Valencià" if provincia == "Valencia" | provincia == "Alicante" | provincia == "Castelló" 
+replace com_autonoma = "Euskadi" if provincia == "Bizkaia" | provincia == "Gipuzkoa" | provincia == "Álava" 
+replace com_autonoma = "Navarra" if provincia == "Navarra" 
+replace com_autonoma = "Murcia" if provincia == "Murcia" 
+replace com_autonoma = "Illes Balears" if provincia == "Illes Balears" 
+replace com_autonoma = "Extremadura" if provincia == "Badajoz" | provincia == "Caceres"
+replace com_autonoma = "Galicia" if provincia == "A Coruña" | provincia == "Lugo" | provincia == "Ourense" | provincia == "Pontevedra"
+replace com_autonoma = "Asturias" if provincia == "Asturias" 
+replace com_autonoma = "Madrid" if provincia == "Madrid" 
+replace com_autonoma = "Andalucia" if provincia == "Almeria" | provincia == "Cádiz" | provincia == "Cordoba" | provincia == "Granada" | provincia == "Huelva" | provincia == "Jaén" | provincia == "Málaga" | provincia == "Sevilla" 
+replace com_autonoma = "Ceuta" if provincia == "Ceuta"
+replace com_autonoma = "Melilla" if provincia == "Melilla"
+replace com_autonoma = "La Rioja" if provincia == "La Rioja"
 
 save "$data\ine_euv_vivienda_poblacion.dta", replace

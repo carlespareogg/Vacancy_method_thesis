@@ -1,6 +1,6 @@
 //Anàlisi de dades INE-POBLACIÓ
 
-use "$data\ine_euv_vivienda_poblacion.dta"
+use "$data\ine_euv_vivienda_poblacion.dta", clear
 
 //Generating change variables with values from 2011 to 2021
 sort codi_regio registro año
@@ -40,6 +40,9 @@ sum vac_pop if año==2021 & codi_regio >52
 sum vac_vtot if codi_regio >52
 sum vac_vtot if año==2011 & codi_regio >52
 sum vac_vtot if año==2021 & codi_regio >52
+
+save "$data\ine_euv_vivienda_poblacion_withvariables.dta", replace
+
 
 //GRPAFIQUES
 ////Agregades
@@ -87,6 +90,53 @@ graph dot (mean) vac_vtot vac_pop if codi_regio >= 1000 & codi_regio < 1999 | co
 graph export "$figures\PB_ine-euv.png", replace
 
 //graph dot (mean) vac_11_21 viv_11_21 if año == 2011|2021 & codi_regio >52 & (registro == "ine" & ((año == 2011 & codi_regio == codi_regio[_n-1]) | (año == 2021 & codi_regio == codi_regio[_n-2]))) | registro == "euv", over(año) over(registro)
+
+
+************************Scatter plolts************************
+
+//vacancy rate-població per any, INE i estimació
+
+capture separate vac_vtot, by(año) 
+
+twoway (scatter vac_vtot poblacion if registro == "ine" & ((año == 2011) & (poblacion > 50000 & poblacion < 200000)), sort) (scatter vac_vtot poblacion if registro == "ine" & ((año == 2021) & (poblacion > 50000 & poblacion < 200000)), sort) (lfit vac_vtot poblacion if registro == "ine" & ((año == 2011) & (poblacion > 50000 & poblacion < 200000))) (lfit vac_vtot poblacion if registro == "ine" & ((año == 2021) & (poblacion > 50000 & poblacion < 200000))), legend(order(1 "2011" 2 "2021" 3 "fitted 2011" 4 "fitted 2021") pos(1) ring(0))
+
+graph export "$figures\ccaa_vacrate.png", replace
+
+///COMENTARI Veiem com el pendent de la línia de tendència baixa, perquè als municipis més poblats ha baixat més la vacancy.
+
+
+***Gràfic amb la diferència
+twoway (scatter vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion < 10000)), sort) (lfit vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion < 10000))), legend(order(1 "2021-2011" 2 "fitted 2021-2011") pos(1) ring(0)) ytitle("Diferencia de viviendas vacías entre 2011 y 2021") title(población < 10000) name(graph1, replace)
+
+twoway (scatter vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion > 10000 & poblacion < 25000)), sort) (lfit vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion > 10000 & poblacion < 25000))), legend(order(1 "2021-2011" 2 "fitted 2021-2011") pos(1) ring(0)) ytitle("Diferencia de viviendas vacías entre 2011 y 2021") title(población < 10000) name(graph1, replace) title(10000 < población < 25000) name(graph2, replace)
+
+twoway (scatter vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion > 25000 & poblacion < 100000)), sort) (lfit vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion > 25000 & poblacion < 100000))), legend(order(1 "2021-2011" 2 "fitted 2021-2011") pos(1) ring(0)) ytitle("Diferencia de viviendas vacías entre 2011 y 2021") title(población < 10000) name(graph1, replace) title(25000 < población < 100000) name(graph3, replace)
+
+twoway (scatter vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion > 100000 & poblacion < 250000)), sort) (lfit vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion > 100000 & poblacion < 250000))), legend(order(1 "2021-2011" 2 "fitted 2021-2011") pos(1) ring(0)) ytitle("Diferencia de viviendas vacías entre 2011 y 2021") title(población < 10000) name(graph1, replace) title(100000 < población < 250000) name(graph4, replace)
+
+twoway (scatter vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion > 250000 & poblacion < 500000)), sort) (lfit vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion > 250000 & poblacion < 500000))), legend(order(1 "2021-2011" 2 "fitted 2021-2011") pos(1) ring(0)) ytitle("Diferencia de viviendas vacías entre 2011 y 2021") title(población < 10000) name(graph1, replace)title(250000 < población < 500000) name(graph5, replace)
+
+twoway (scatter vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion > 500000)), sort) (lfit vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion > 500000))), legend(order(1 "2021-2011" 2 "fitted 2021-2011") pos(1) ring(0)) ytitle("Diferencia de viviendas vacías entre 2011 y 2021") title(población < 10000) name(graph1, replace)title(500000 < población) name(graph6, replace)
+
+graph combine graph1 graph2 graph3 graph4 graph5 graph6, rows(3) cols(2)
+
+
+graph export "$figures\Dif_pob_viv_scatter_grid.png", replace
+
+///COMENTARI: sembla que la relació no és gaire forta i a més és la contrària a l'esperada: si la població va a centres més poblats i allà la vivenda buida es redueix hauriem de veure una línia descendent, no és el cas. El que sí que veiem és que la vivenda buida s'ha reduit, perquè la tendència es troba sempre en valros negatius, però s'ha reduit més en municipis on s'ha reduit més la poblacio
+
+twoway (scatter vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion > 50000 & poblacion < 500000)), sort) (lfit vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion > 50000 & poblacion < 500000))), legend(order(1 "2021-2011" 2 "fitted 2021-2011") pos(1) ring(0)) ytitle("Diferencia de viviendas vacías entre 2011 y 2021")
+
+
+****************Graphs over territory******************
+
+graph dot (mean) vac_vtot if registro == "ine" & ((año == 2011) & (poblacion > 50000 & poblacion < 200000)), o(com_autonoma, sort(1)) name(ccaa1, replace)
+
+graph dot (mean) vac_vtot if registro == "ine" & ((año == 2021) & (poblacion > 50000 & poblacion < 200000)), o(com_autonoma, sort(1)) marker(1, mcolor(red)) name(ccaa2, replace)
+
+graph combine ccaa1 ccaa2, rows(1)
+
+
 
 
 
