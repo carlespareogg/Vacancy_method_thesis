@@ -98,7 +98,7 @@ graph export "$figures\PB_ine-euv.png", replace
 
 capture separate vac_vtot, by(año) 
 
-twoway (scatter vac_vtot poblacion if registro == "ine" & ((año == 2011) & (poblacion > 50000 & poblacion < 200000)), sort) (scatter vac_vtot poblacion if registro == "ine" & ((año == 2021) & (poblacion > 50000 & poblacion < 200000)), sort) (lfit vac_vtot poblacion if registro == "ine" & ((año == 2011) & (poblacion > 50000 & poblacion < 200000))) (lfit vac_vtot poblacion if registro == "ine" & ((año == 2021) & (poblacion > 50000 & poblacion < 200000))), legend(order(1 "2011" 2 "2021" 3 "fitted 2011" 4 "fitted 2021") pos(1) ring(0))
+twoway (scatter vac_vtot poblacion if registro == "ine" & ((año == 2011) & (poblacion > 50000 & poblacion < 200000)), sort) (scatter vac_vtot poblacion if registro == "ine" & ((año == 2021) & (poblacion > 50000 & poblacion < 200000)), sort) (lfit vac_vtot poblacion if registro == "ine" & ((año == 2011) & (poblacion > 50000 & poblacion < 200000))) (lfit vac_vtot poblacion if registro == "ine" & ((año == 2021) & (poblacion > 50000 & poblacion < 200000))), legend(order(1 "2011" 2 "2021" 3 "fitted 2011" 4 "fitted 2021") pos(1) ring(0)) ytitle("vacancy rate")
 
 graph export "$figures\ccaa_vacrate.png", replace
 
@@ -127,6 +127,9 @@ graph export "$figures\Dif_pob_viv_scatter_grid.png", replace
 
 twoway (scatter vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion > 50000 & poblacion < 500000)), sort) (lfit vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion > 50000 & poblacion < 500000))), legend(order(1 "2021-2011" 2 "fitted 2021-2011") pos(1) ring(0)) ytitle("Diferencia de viviendas vacías entre 2011 y 2021")
 
+graph export "$figures\Dif_pob_viv_scatter.png", replace
+
+
 
 ****************Graphs over territory******************
 
@@ -135,6 +138,8 @@ graph dot (mean) vac_vtot if registro == "ine" & ((año == 2011) & (poblacion > 
 graph dot (mean) vac_vtot if registro == "ine" & ((año == 2021) & (poblacion > 50000 & poblacion < 200000)), o(com_autonoma, sort(1)) marker(1, mcolor(red)) name(ccaa2, replace)
 
 graph combine ccaa1 ccaa2, rows(1)
+
+graph export "$figures\ccaa_viv_ordered_grid.png", replace
 
 
 
