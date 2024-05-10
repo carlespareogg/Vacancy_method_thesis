@@ -22,6 +22,11 @@ global data "$path\1. Cleaning and merging\3. Clean data"
 global figures "$path\2. Analisis\Figures"
 
 
+//*Installing packages
+ssc install schemepack, replace
+ssc install colrspace, replace
+ssc install palettes, replace
+
 //* Clean data
 do "1. Cleaning and merging\Cleaning and merging.do"
 
