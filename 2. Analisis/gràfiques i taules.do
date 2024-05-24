@@ -2,6 +2,7 @@
 
 use "$data\ine_euv_vivienda_poblacion.dta", clear
 
+*FER RESHAPE WIDE PER A FER EL CÀLCUL CORRECTE
 
 //Generating change variables with values from 2011 to 2021
 sort codi_regio registro año
@@ -37,59 +38,273 @@ replace segmento = 2 if (poblacion > 10000 & poblacion < 25000)
 replace segmento = 3 if (poblacion > 25000 & poblacion < 50000)
 replace segmento = 4 if (poblacion > 50000 & poblacion < 75000)
 replace segmento = 5 if (poblacion > 75000 & poblacion < 100000)
-replace segmento = 6 if (poblacion > 100000 & poblacion < 150000)
-replace segmento = 7 if (poblacion > 150000 & poblacion < 200000)
-replace segmento = 8 if (poblacion > 200000 & poblacion < 250000)
-replace segmento = 9 if (poblacion > 250000 & poblacion < 500000)
-replace segmento = 10 if (poblacion > 500000 & poblacion < 1000000)
-replace segmento = . if regexm(nom_regio, "^Resto de.*$")
+replace segmento = 6 if (poblacion > 100000 & poblacion < 175000)
+replace segmento = 7 if (poblacion > 175000 & poblacion < 250000)
+replace segmento = 8 if (poblacion > 250000 & poblacion < 500000)
+replace segmento = 9 if (poblacion > 500000)
+replace segmento = . if regexm(nom_regio, "^Resto de.*$") | codi_regio < 52 | codi_regio == .
+
+**Clean population data
+drop if poblacion == .
 
 la variable segmento 		"Segmento poblacional del municipio"
 
-**Estadísticas básicas
+**# Estadísticas básicas
 	
 sum viviendas_vacias if año==2021 & registro=="ine" & codi_regio >52
 
-sum vac_pop if codi_regio >52
-sum vac_pop if año==2011 & codi_regio >52
-sum vac_pop if año==2021 & codi_regio >52
+**********************
+**# VACANCY WEIGHTED TABLE
+* Calcular estadísticas para 2021, registro "ine", no ponderado
+summarize viviendas_vacias if año == 2021 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999"
+matrix vv21un = r(N), r(mean), r(sd), r(min), r(max)
 
+* Calcular estadísticas para 2021, registro "ine", ponderado
+summarize viviendas_vacias [aw=poblacion] if año == 2021 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999"
+matrix vv21aw = r(N), r(mean), r(sd), r(min), r(max)
 
-sum vac_vtot if codi_regio >52
-sum vac_vtot if año==2011 & codi_regio >52
-sum vac_vtot if año==2021 & codi_regio >52
+* Calcular estadísticas para 2011, registro "ine", no ponderado
+summarize viviendas_vacias if año == 2011 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999"
+matrix vv11un = r(N), r(mean), r(sd), r(min), r(max)
 
-save "$data\ine_euv_vivienda_poblacion_withvariables.dta", replace
+* Calcular estadísticas para 2011, registro "ine", ponderado
+summarize viviendas_vacias [aw=poblacion] if año == 2011 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999"
+matrix vv11aw = r(N), r(mean), r(sd), r(min), r(max)
 
-*____________________________________________________________________
-*EN CONSTRUCCIÓ
-**# Porcentaje de vivienda vacía por segmento poblacional
-	foreach año in 2011 2021 {
-    foreach registro in "ine" "euv" {
+* Combinar matrices en una sola matriz
+matrix results = (vv21un \ vv21aw \ vv11un \ vv11aw)
+
+* Añadir nombres de filas y columnas
+matrix rownames results = "Unweighted 2021" "Weighted 2021" "Unweighted 2011" "Weighted 2011"
+matrix colnames results = "count" "mean" "sd" "min" "max"
+
+* Mostrar la matriz en formato de tabla
+matlist results, format(%9.2f)
+
+* Exportar la tabla a un archivo RTF
+esttab matrix(results) using "descriptives_table_vvweights.rtf", replace ///
+    cells("count mean sd min max") ///
+    title("Unweighted and Weighted Statistics of vacancy dwellings") ///
+    nonumbers nomtitles note("Data: INE")
+	
+
+************************************************************************************************************************************************************
+**# Metodologica EUV-INE. Porcentaje de vivienda vacía de cada segmento poblacional
+
+foreach año in 2011 2021 {
+    foreach registro in ine euv {
+        display "Procesando año: `año', registro: `registro'"
+
         // Calcular el total de viviendas vacías por segmento de población
-        bysort segmento: egen vac_tot`año'`registro' = total(viviendas_vacias) if (año == `año' & registro == "`registro'")
-		//Calcular total de viviendas vacias por año y registro
-		egen viv_tot`año'`registro' = total(viviendas_totales) if (año == `año' & registro == "`registro'")
-		//Calcular la ratio de viviendas totales de cada segmento de población por año y registro
-		bysort segmento: gen vac_vtot`año'`registro' = vac_tot`año'`registro'/ viv_tot`año'`registro' if (año == `año' & registro == "`registro'")
+        bysort segmento: egen vac_tot`año'_`registro'_s_pb = total(viviendas_vacias) if (año == `año' & registro == "`registro'" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999") & codi_regio != . & ((codi_regio >= 1000 & codi_regio < 1999) | (codi_regio >= 20000 & codi_regio < 20999) | (codi_regio >= 48000 & codi_regio < 48999))
 
-		table segmento vac_vtot`año'`registro'
-        
+        // Calcular total de viviendas totales por año y registro
+        bysort segmento: egen viv_tot`año'_`registro'_s_pb = total(viviendas_totales) if (año == `año' & registro == "`registro'" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999") & codi_regio != . & ((codi_regio >= 1000 & codi_regio < 1999) | (codi_regio >= 20000 & codi_regio < 20999) | (codi_regio >= 48000 & codi_regio < 48999))
+
+        // Calcular la ratio de viviendas totales de cada segmento de población por año y registro
+        bysort segmento: gen vac_vtot`año'_`registro'_s_pb = vac_tot`año'_`registro'_s_pb / viv_tot`año'_`registro'_s_pb if (año == `año' & registro == "`registro'" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999") & codi_regio != . & ((codi_regio >= 1000 & codi_regio < 1999) | (codi_regio >= 20000 & codi_regio < 20999) | (codi_regio >= 48000 & codi_regio < 48999))
     }
 }
 
+******************TABULATION
 
-// Mostrar la tabla de porcentajes de viviendas vacías por segmento de población
-table segmento, c(sum seg_vac_vactot)
+* Crear una lista de segmentos
+levelsof segmento, local(segments)
+
+* Crear una matriz temporal para almacenar los resultados
+local rows = 4
+local cols = `: word count `segments''  // Número de segmentos
+local total_cols = `cols' + 1  // Número de segmentos más una columna para la media ponderada
+
+matrix results = J(`rows', `total_cols', .)
+
+* Añadir nombres de filas y columnas a la matriz
+matrix rownames results = "2011 INE" "2011 EUV" "2021 INE" "2021 EUV"
+local colnames = ""
+foreach seg of local segments {
+    local colnames = "`colnames' seg`seg'"
+}
+local colnames = "`colnames' mean"  // Añadir columna media
+matrix colnames results = `colnames'
+
+* Llenar la matriz con los valores de vac_vtot_s
+local i = 1
+foreach año in 2011 2021 {
+    foreach registro in ine euv {
+        local j = 1
+        foreach seg of local segments {
+            summarize vac_vtot`año'_`registro'_s_pb if segmento == `seg'
+            if r(N) > 0 {
+                matrix results[`i', `j'] = r(mean)
+            } 
+			else {
+                matrix results[`i', `j'] = 0
+            }
+            local j = `j' + 1
+        }
+        summarize vac_vtot [aw=poblacion] if año == `año' & registro == "`registro'" & codi_regio > 52 & (substr(string(codi_regio), -3, 3) != "999") & codi_regio != . & ((codi_regio >= 1000 & codi_regio < 1999) | (codi_regio >= 20000 & codi_regio < 20999) | (codi_regio >= 48000 & codi_regio < 48999))
+        if r(N) > 0 {
+            matrix results[`i', `total_cols'] = r(mean)
+        } 
+		else {
+            matrix results[`i', `total_cols'] = 0
+        }
+        local i = `i' + 1
+    }
+}
+
+* Mostrar la matriz en formato de tabla con 3 decimales
+matlist results, format(%9.3f)
+
+* Exportar la tabla a un archivo RTF con formato de 3 decimales
+esttab matrix(results, fmt(%9.3f)) using "vivienda_vacía_por_segmento_vtot_s_pb.rtf", replace ///
+    title("Vacancy rate for population segment, comparing results using INE or EUB data") ///
+    nonumbers nomtitles note("Data: INE & EUV. Mean computed with analitical weights using population. Segments' codification: 1 if poblacion < 10000; 2 if 10000 < population < 25000; 3 if 25000 < population < 50000; 4 if 50000 < population < 75000; 5 if 75000 < population < 100000; 6 if 100000 < population < 175000; 7 if 175000 < population < 250000; 8 if  250000 < population < 500000; 9 if population > 500000")
 
 
-*aquí tinc creat la variable 
 
-la variable vac_vactot  	"Porcentaje de vivienda vacía sobre el total de vivenda vacía"
-egen seg_vac_vactot = 
-estpost sum vac_vtot, by(segmento)
-estimates title: Vacancy rate por segmento poblacional
-estimates store seg_vac_vtot
+
+
+******************************************************************************************************************************************************************************************************************************************
+**# Porcentaje de vivienda vacía por segmento poblacional
+foreach año in 2011 2021 {
+    foreach registro in ine euv {
+        // Calcular el total de viviendas vacías por año y registro
+        egen vac_tot`año'_`registro' = total(viviendas_vacias) if (año == `año' & registro == "`registro'" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999") & codi_regio != .
+
+        // Calcular total de viviendas vacías por segmento, año y registro
+        bysort segmento: egen vac_tot`año'_`registro'_s = total(viviendas_vacias) if (año == `año' & registro == "`registro'" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999") & codi_regio != .
+
+        // Calcular la ratio de viviendas vacías totales de cada segmento de población por año y registro
+        gen vac_vtot`año'_`registro' = vac_tot`año'_`registro'_s / vac_tot`año'_`registro' if (año == `año' & registro == "`registro'" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999") & codi_regio != .
+		
+    }
+}
+
+* Crear una lista de segmentos
+levelsof segmento, local(segments)
+
+* Crear una matriz temporal para almacenar los resultados
+local rows = 4
+local cols = `: word count `segments''  // Número de segmentos
+local total_cols = `cols' + 1  // Número de segmentos más una columna para la suma total
+
+matrix results = J(`rows', `total_cols', .)
+
+* Añadir nombres de filas y columnas a la matriz
+matrix rownames results = "2011 INE" "2011 EUV" "2021 INE" "2021 EUV"
+local colnames = ""
+foreach seg of local segments {
+    local colnames = "`colnames' seg`seg'"
+}
+local colnames = "`colnames' total"  // Añadir columna total
+matrix colnames results = `colnames'
+
+* Llenar la matriz con los valores de vac_vtot
+local i = 1
+foreach año in 2011 2021 {
+    foreach registro in ine euv {
+        local j = 1
+        local row_sum = 0
+        foreach seg of local segments {
+            summarize vac_vtot`año'_`registro' if segmento == `seg'
+            if r(N) > 0 {
+                matrix results[`i', `j'] = r(mean)
+                local row_sum = `row_sum' + r(mean)
+            } 
+			else {
+                matrix results[`i', `j'] = 0
+            }
+            local j = `j' + 1
+        }
+        matrix results[`i', `total_cols'] = `row_sum'  // Asignar suma a la columna total
+        local i = `i' + 1
+    }
+}
+
+* Mostrar la matriz en formato de tabla
+matlist results, format(%9.3f)
+
+* Exportar la tabla a un archivo RTF
+esttab matrix(results, fmt(%9.3f)) using "vivienda_vacía_por_segmento.rtf", replace ///
+    title("Percentage of vacancy for population segment") ///
+    nonumbers nomtitles note("Data: INE & EUV. Segments' codification: 1 if poblacion < 10000; 2 if 10000 < population < 25000; 3 if 25000 < population < 50000; 4 if 50000 < population < 75000; 5 if 75000 < population < 100000; 6 if 100000 < population < 175000; 7 if 175000 < population < 250000; 8 if  250000 < population < 500000; 9 if population > 500000")
+	
+	
+
+************************************************************************************************************************************************************
+**# Porcentaje de vivienda vacía de cada segmento poblacional
+
+foreach año in 2011 2021 {
+    foreach registro in ine euv {
+        display "Procesando año: `año', registro: `registro'"
+/*
+        // Calcular el total de viviendas vacías por segmento de población
+        bysort segmento: egen vac_tot`año'_`registro'_s = total(viviendas_vacias) if (año == `año' & registro == "`registro'" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999") & codi_regio != .
+*/
+        // Calcular total de viviendas totales por año y registro
+        bysort segmento: egen viv_tot`año'_`registro'_s = total(viviendas_totales) if (año == `año' & registro == "`registro'" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999") & codi_regio != .
+
+        // Calcular la ratio de viviendas totales de cada segmento de población por año y registro
+        bysort segmento: gen vac_vtot`año'_`registro'_s = vac_tot`año'_`registro'_s / viv_tot`año'_`registro'_s if (año == `año' & registro == "`registro'" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999") & codi_regio != .
+    }
+}
+
+*____________________________________________________________________
+
+* Crear una lista de segmentos
+levelsof segmento, local(segments)
+
+* Crear una matriz temporal para almacenar los resultados
+local rows = 4
+local cols = `: word count `segments''  // Número de segmentos
+local total_cols = `cols' + 1  // Número de segmentos más una columna para la media ponderada
+
+matrix results = J(`rows', `total_cols', .)
+
+* Añadir nombres de filas y columnas a la matriz
+matrix rownames results = "2011 INE" "2011 EUV" "2021 INE" "2021 EUV"
+local colnames = ""
+foreach seg of local segments {
+    local colnames = "`colnames' seg`seg'"
+}
+local colnames = "`colnames' mean"  // Añadir columna media
+matrix colnames results = `colnames'
+
+* Llenar la matriz con los valores de vac_vtot_s
+local i = 1
+foreach año in 2011 2021 {
+    foreach registro in ine euv {
+        local j = 1
+        foreach seg of local segments {
+            summarize vac_vtot`año'_`registro'_s if segmento == `seg'
+            if r(N) > 0 {
+                matrix results[`i', `j'] = r(mean)
+            } 
+			else {
+                matrix results[`i', `j'] = 0
+            }
+            local j = `j' + 1
+        }
+        summarize vac_vtot [aw=poblacion] if año == `año' & registro == "`registro'" & codi_regio > 52 & (substr(string(codi_regio), -3, 3) != "999") & codi_regio != .
+        if r(N) > 0 {
+            matrix results[`i', `total_cols'] = r(mean)
+        } 
+		else {
+            matrix results[`i', `total_cols'] = 0
+        }
+        local i = `i' + 1
+    }
+}
+
+* Mostrar la matriz en formato de tabla con 3 decimales
+matlist results, format(%9.3f)
+
+* Exportar la tabla a un archivo RTF con formato de 3 decimales
+esttab matrix(results, fmt(%9.3f)) using "vivienda_vacía_por_segmento_vtot_s.rtf", replace ///
+    title("Vacancy rate for population segment") ///
+    nonumbers nomtitles note("Data: INE & EUV. Mean computed with analitical weights using population. Segments' codification: 1 if poblacion < 10000; 2 if 10000 < population < 25000; 3 if 25000 < population < 50000; 4 if 50000 < population < 75000; 5 if 75000 < population < 100000; 6 if 100000 < population < 175000; 7 if 175000 < population < 250000; 8 if  250000 < population < 500000; 9 if population > 500000")
+
 
 *____________________________________________________________________
 
