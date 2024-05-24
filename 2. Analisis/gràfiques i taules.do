@@ -53,7 +53,10 @@ la variable segmento 		"Segmento poblacional del municipio"
 	
 sum viviendas_vacias if año==2021 & registro=="ine" & codi_regio >52
 
-**********************
+*******************************************************************************************************************************************************
+
+
+
 **# VACANCY WEIGHTED TABLE
 * Calcular estadísticas para 2021, registro "ine", no ponderado
 summarize viviendas_vacias if año == 2021 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999"
@@ -82,10 +85,47 @@ matrix colnames results = "count" "mean" "sd" "min" "max"
 matlist results, format(%9.2f)
 
 * Exportar la tabla a un archivo RTF
-esttab matrix(results) using "descriptives_table_vvweights.rtf", replace ///
+esttab matrix(results, fmt(%9.3f)) using "descriptives_table_vvweights.rtf", replace ///
     cells("count mean sd min max") ///
     title("Unweighted and Weighted Statistics of vacancy dwellings") ///
     nonumbers nomtitles note("Data: INE")
+	
+****************************************************************************************************************************************************************************
+**# VACANCY RATE AND VACANCY/POPULATION TABLE
+* Calcular vacancy/population para 2021, registro "ine", ponderado
+summarize vac_pop [aw=poblacion] if año == 2021 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999"
+matrix vv21un = r(N), r(mean), r(sd), r(min), r(max)
+
+* Calcular vacancy rate para 2021, registro "ine", ponderado
+summarize vac_vtot [aw=poblacion] if año == 2021 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999"
+matrix vv21aw = r(N), r(mean), r(sd), r(min), r(max)
+
+* Calcular estadísticas para 2011, registro "ine", no ponderado
+summarize vac_pop [aw=poblacion] if año == 2011 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999"
+matrix vv11un = r(N), r(mean), r(sd), r(min), r(max)
+
+* Calcular estadísticas para 2011, registro "ine", ponderado
+summarize vac_vtot [aw=poblacion] if año == 2011 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999"
+matrix vv11aw = r(N), r(mean), r(sd), r(min), r(max)
+
+* Combinar matrices en una sola matriz
+matrix results = (vv21un \ vv21aw \ vv11un \ vv11aw)
+
+* Añadir nombres de filas y columnas
+matrix rownames results = "Vacancy/pop 2021" "Vacancy rate 2021" "Vacancy/pop 2011" "Vacancy rate 2011"
+matrix colnames results = "count" "mean" "sd" "min" "max"
+
+* Mostrar la matriz en formato de tabla
+matlist results, format(%9.2f)
+
+* Exportar la tabla a un archivo RTF
+esttab matrix(results, fmt(%9.3f)) using "descriptives_table_rates_ine.rtf", replace ///
+    cells("count mean sd min max") ///
+    title("Vacancy controlled by size of the municipality") ///
+    nonumbers nomtitles note("Data: INE")
+
+
+
 	
 
 ************************************************************************************************************************************************************
@@ -158,7 +198,7 @@ matlist results, format(%9.3f)
 
 * Exportar la tabla a un archivo RTF con formato de 3 decimales
 esttab matrix(results, fmt(%9.3f)) using "vivienda_vacía_por_segmento_vtot_s_pb.rtf", replace ///
-    title("Vacancy rate for population segment, comparing results using INE or EUB data") ///
+    title("Vacancy rate for population segment, comparing Basque Country's results using INE or EUB data") ///
     nonumbers nomtitles note("Data: INE & EUV. Mean computed with analitical weights using population. Segments' codification: 1 if poblacion < 10000; 2 if 10000 < population < 25000; 3 if 25000 < population < 50000; 4 if 50000 < population < 75000; 5 if 75000 < population < 100000; 6 if 100000 < population < 175000; 7 if 175000 < population < 250000; 8 if  250000 < population < 500000; 9 if population > 500000")
 
 
@@ -309,9 +349,21 @@ esttab matrix(results, fmt(%9.3f)) using "vivienda_vacía_por_segmento_vtot_s.rt
 *____________________________________________________________________
 
 **# GRPAFIQUES
-////Agregades
-graph dot (mean) vac_vtot vac_pop if año == 2011|2021 & codi_regio >52, over(año)
-graph dot (mean) vac_vtot vac_pop if año == 2011|2021 & codi_regio >52, over(año) over(registro)
+////Agregada
+graph dot (mean) vac_vtot vac_pop [aw=poblacion] if año == 2011|2021 & (codi_regio >52 & substr(string(codi_regio), -3, 3) != "999" & codi_regio != .), over(año) over(registro) 
+
+graph export "$figures\vacancies_spain_weighted.png", replace
+
+////Agafant només el País Vasc, comparar dades de INE i EUV 
+
+
+graph dot (mean) vac_vtot vac_pop if (codi_regio >= 1000 & codi_regio < 1999 | codi_regio >= 20000 & codi_regio < 20999 | codi_regio >= 48000 & codi_regio < 48999) & (substr(string(codi_regio), -3, 3) != "999" & codi_regio != .) [aw=poblacion], over(año) over(registro)
+
+graph export "$figures\vacancies_PB_weighted.png", replace
+
+//graph dot (mean) vac_11_21 viv_11_21 if año == 2011|2021 & codi_regio >52 & (registro == "ine" & ((año == 2011 & codi_regio == codi_regio[_n-1]) | (año == 2021 & codi_regio == codi_regio[_n-2]))) | registro == "euv", over(año) over(registro)
+
+
 
 //Per tamany de població
 graph dot (mean) vac_vtot vac_pop if poblacion < 10000 & (año == 2011 | año == 2021) & (codi_regio >52) & registro == "ine" & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion],over(año) over(registro) title(población < 10000) name(graph1, replace)
@@ -333,7 +385,7 @@ graph combine graph1 graph2 graph3 graph4 graph5 graph6, rows(3) cols(2)
 graph export "$figures\GridPobl_ine-euv.png", replace
 
 
-//Per tamany de població només agafant País Basc 
+//Per tamany de població només agafant País Basc
 
 graph dot (mean) vac_vtot vac_pop if ((codi_regio >= 1000 & codi_regio < 1999) | (codi_regio >= 20000 & codi_regio < 20999) | (codi_regio >= 48000 & codi_regio < 48999)) & (año == 2011 | año == 2021) & (poblacion > 10000 & poblacion < 25000) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], over(año) over(registro) title(10000 < población < 25000) name(graph1, replace)
 
@@ -349,14 +401,6 @@ graph combine graph1 graph2 graph3 graph4, rows(2) cols	(2)
 
 graph export "$figures\GridPoblPB_ine-euv.png", replace
 
-////Agafant només el País Vasc, comparar dades de INE i EUV 
-//graph dot (mean) vac_vtot vac_pop if año == 2011|2021 & codi_regio >52 & (registro == "ine" & ((año == 2011 & codi_regio == codi_regio[_n-1]) | (año == 2021 & codi_regio == codi_regio[_n-2]))) | registro == "euv", over(año) over(registro)
-
-graph dot (mean) vac_vtot vac_pop if (codi_regio >= 1000 & codi_regio < 1999 | codi_regio >= 20000 & codi_regio < 20999 | codi_regio >= 48000 & codi_regio < 48999) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], over(año) over(registro)
-
-graph export "$figures\PB_ine-euv.png", replace
-
-//graph dot (mean) vac_11_21 viv_11_21 if año == 2011|2021 & codi_regio >52 & (registro == "ine" & ((año == 2011 & codi_regio == codi_regio[_n-1]) | (año == 2021 & codi_regio == codi_regio[_n-2]))) | registro == "euv", over(año) over(registro)
 
 
 //Threshold quan vacancy es manté
