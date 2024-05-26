@@ -173,7 +173,7 @@ foreach año in 2011 2021 {
     foreach registro in ine euv {
         local j = 1
         foreach seg of local segments {
-            summarize vac_vtot`año'_`registro'_s_pb if segmento == `seg'
+            summarize vac_vtot`año'_`registro'_s_pb [aw=poblacion] if segmento == `seg'
             if r(N) > 0 {
                 matrix results[`i', `j'] = r(mean)
             } 
@@ -182,7 +182,7 @@ foreach año in 2011 2021 {
             }
             local j = `j' + 1
         }
-        summarize vac_vtot [aw=poblacion] if año == `año' & registro == "`registro'" & codi_regio > 52 & (substr(string(codi_regio), -3, 3) != "999") & codi_regio != . & ((codi_regio >= 1000 & codi_regio < 1999) | (codi_regio >= 20000 & codi_regio < 20999) | (codi_regio >= 48000 & codi_regio < 48999))
+        summarize vac_vtot if año == `año' & registro == "`registro'" & codi_regio > 52 & (substr(string(codi_regio), -3, 3) != "999") & codi_regio != . & ((codi_regio >= 1000 & codi_regio < 1999) | (codi_regio >= 20000 & codi_regio < 20999) | (codi_regio >= 48000 & codi_regio < 48999))
         if r(N) > 0 {
             matrix results[`i', `total_cols'] = r(mean)
         } 
@@ -317,7 +317,7 @@ foreach año in 2011 2021 {
     foreach registro in ine euv {
         local j = 1
         foreach seg of local segments {
-            summarize vac_vtot`año'_`registro'_s if segmento == `seg'
+            summarize vac_vtot`año'_`registro'_s [aw=poblacion] if segmento == `seg'
             if r(N) > 0 {
                 matrix results[`i', `j'] = r(mean)
             } 
@@ -326,7 +326,7 @@ foreach año in 2011 2021 {
             }
             local j = `j' + 1
         }
-        summarize vac_vtot [aw=poblacion] if año == `año' & registro == "`registro'" & codi_regio > 52 & (substr(string(codi_regio), -3, 3) != "999") & codi_regio != .
+        summarize vac_vtot if año == `año' & registro == "`registro'" & codi_regio > 52 & (substr(string(codi_regio), -3, 3) != "999") & codi_regio != .
         if r(N) > 0 {
             matrix results[`i', `total_cols'] = r(mean)
         } 
