@@ -2,13 +2,31 @@
 
 use "$data\ine_euv_vivienda_poblacion.dta", clear
 
+drop if año==.
+
 *FER RESHAPE WIDE PER A FER EL CÀLCUL CORRECTE
 
 //Generating change variables with values from 2011 to 2021
+*____________________________________________
+g lnpoblacion = ln(poblacion)
+g lnviviendas_vacias = ln(viviendas_vacias)
+g lnviviendas_totales = ln(viviendas_totales)
+
+sort codi_regio registro año
+bysort codi_regio: gen lnpoblacio_11_21 = lnpoblacion - lnpoblacion[_n-1] if _n>1 & año==2021 & registro=="ine"
+bysort codi_regio: gen lnvac_11_21_ine = lnviviendas_vacias - lnviviendas_vacias[_n-1] if _n>1 & año==2021 & registro=="ine"
+bysort codi_regio: gen lnviv_11_21_ine = lnviviendas_totales - lnviviendas_totales[_n-1] if _n>1 & año==2021 & registro=="ine" 
+
+bysort codi_regio: gen ln_poblacio_11_21 = ln(poblacion - poblacion[_n-1]) if _n>1 & año==2021 & registro=="ine"
+bysort codi_regio: gen ln_vac_11_21_ine = ln(viviendas_vacias - viviendas_vacias[_n-1]) if _n>1 & año==2021 & registro=="ine"
+bysort codi_regio: gen ln_viv_11_21_ine = ln(viviendas_totales - viviendas_totales[_n-1]) if _n>1 & año==2021 & registro=="ine" 
+
+*__________________________________
+
 sort codi_regio registro año
 bysort codi_regio: gen poblacio_11_21 = poblacion - poblacion[_n-1] if _n>1 & año==2021 & registro=="ine"
 bysort codi_regio: gen vac_11_21_ine = viviendas_vacias - viviendas_vacias[_n-1] if _n>1 & año==2021 & registro=="ine"
-bysort codi_regio: gen viv_11_21_ine = viviendas_totales - viviendas_totales[_n-1] if _n>1 & año==2021 & registro=="ine"
+bysort codi_regio: gen viv_11_21_ine = viviendas_totales - viviendas_totales[_n-1] if _n>1 & año==2021 & registro=="ine" 
 
 bysort codi_regio: gen vac_11_21_euv = viviendas_vacias - viviendas_vacias[_n-5] if _n>1 & año==2021 & registro=="euv"
 bysort codi_regio: gen viv_11_21_euv = viviendas_totales - viviendas_totales[_n-5] if _n>1 & año==2021 & registro=="euv"
@@ -23,7 +41,12 @@ gen viv_11_21 = viv_11_21_euv + viv_11_21_ine
 
 
 gen vac_pop = viviendas_vacias / poblacion
+gen lnvac_pop = ln(viviendas_vacias / poblacion)
+gen ln_vac_pop = ln(viviendas_vacias)/ln(poblacion)
 gen vac_vtot = viviendas_vacias / viviendas_totales
+gen lnvac_vtot = ln(viviendas_totales / poblacion)
+gen ln_vac_vtot = ln(viviendas_totales) / ln(poblacion)
+
 
 la variable	viv_11_21		"Diferencia de viviendas totales entre 2011 y 2021"
 la variable	vac_11_21		"Diferencia de viviendas vacías entre 2011 y 2021"
@@ -49,29 +72,47 @@ drop if poblacion == .
 
 la variable segmento 		"Segmento poblacional del municipio"
 
+**Crear variable de número de construcciones nuevas
+egen newconstruc_11_21 = rowtotal(construccion_2011-construccion_2020)
+
+g lnnewconstruc_11_21 = ln(newconstruc_11_21)
+
 **# Estadísticas básicas
-	
-sum viviendas_vacias if año==2021 & registro=="ine" & codi_regio >52
 
 *******************************************************************************************************************************************************
 
+**# CORRELATION POPULATION CHANGE AND NEW CONSTRUCTIONS
+corr lnnewconstruc_11_21 ln_poblacio_11_21 [aw=poblacion]
+corr lnnewconstruc_11_21 ln_poblacio_11_21 
+
+twoway (scatter ln_poblacio_11_21 lnnewconstruc_11_21, mcolor(blue)) /// 
+       (scatter ln_poblacio_11_21 lnnewconstruc_11_21 [aw=poblacion], mcolor(cranberry)) ///
+       , legend(order(1 "unweighted, corr = 0.63" 2 "weighted, corr = 0.78") pos(3) ring(0)) ///
+         ytitle("logarithm of change of population 2011-2021") ///
+		 xtitle("logarithm of constructions made between 2011 and 2020") ///
+         scheme(white_w3d) ///
+         title("Correlation of population change and constructions") ///
+		 note("Data: INE")
+
+graph export "$figures\correlations.png", replace
 
 
+*____________________________________________________________________
 **# VACANCY WEIGHTED TABLE
 * Calcular estadísticas para 2021, registro "ine", no ponderado
-summarize viviendas_vacias if año == 2021 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999"
+summarize viviendas_vacias if año == 2021 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999", detail
 matrix vv21un = r(N), r(mean), r(sd), r(min), r(max)
 
 * Calcular estadísticas para 2021, registro "ine", ponderado
-summarize viviendas_vacias [aw=poblacion] if año == 2021 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999"
+summarize viviendas_vacias [aw=poblacion] if año == 2021 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999", detail
 matrix vv21aw = r(N), r(mean), r(sd), r(min), r(max)
 
 * Calcular estadísticas para 2011, registro "ine", no ponderado
-summarize viviendas_vacias if año == 2011 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999"
+summarize viviendas_vacias if año == 2011 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999", detail
 matrix vv11un = r(N), r(mean), r(sd), r(min), r(max)
 
 * Calcular estadísticas para 2011, registro "ine", ponderado
-summarize viviendas_vacias [aw=poblacion] if año == 2011 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999"
+summarize viviendas_vacias [aw=poblacion] if año == 2011 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999", detail
 matrix vv11aw = r(N), r(mean), r(sd), r(min), r(max)
 
 * Combinar matrices en una sola matriz
@@ -85,7 +126,7 @@ matrix colnames results = "count" "mean" "sd" "min" "max"
 matlist results, format(%9.2f)
 
 * Exportar la tabla a un archivo RTF
-esttab matrix(results, fmt(%9.3f)) using "descriptives_table_vvweights.rtf", replace ///
+esttab matrix(results) using "$tables/descriptives_table_vvweights.rtf", replace ///
     cells("count mean sd min max") ///
     title("Unweighted and Weighted Statistics of vacancy dwellings") ///
     nonumbers nomtitles note("Data: INE")
@@ -93,36 +134,69 @@ esttab matrix(results, fmt(%9.3f)) using "descriptives_table_vvweights.rtf", rep
 ****************************************************************************************************************************************************************************
 **# VACANCY RATE AND VACANCY/POPULATION TABLE
 * Calcular vacancy/population para 2021, registro "ine", ponderado
-summarize vac_pop [aw=poblacion] if año == 2021 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999"
-matrix vv21un = r(N), r(mean), r(sd), r(min), r(max)
+summarize vac_pop [aw=poblacion] if año == 2021 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999", detail
+matrix vv21un = r(N), r(mean), r(sd), r(p10), r(p90)
 
 * Calcular vacancy rate para 2021, registro "ine", ponderado
-summarize vac_vtot [aw=poblacion] if año == 2021 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999"
-matrix vv21aw = r(N), r(mean), r(sd), r(min), r(max)
+summarize vac_vtot [aw=poblacion] if año == 2021 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999", detail
+matrix vv21aw = r(N), r(mean), r(sd), r(p10), r(p90)
 
 * Calcular estadísticas para 2011, registro "ine", no ponderado
-summarize vac_pop [aw=poblacion] if año == 2011 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999"
-matrix vv11un = r(N), r(mean), r(sd), r(min), r(max)
+summarize vac_pop [aw=poblacion] if año == 2011 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999", detail
+matrix vv11un = r(N), r(mean), r(sd), r(p10), r(p90)
 
 * Calcular estadísticas para 2011, registro "ine", ponderado
-summarize vac_vtot [aw=poblacion] if año == 2011 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999"
-matrix vv11aw = r(N), r(mean), r(sd), r(min), r(max)
+summarize vac_vtot [aw=poblacion] if año == 2011 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999", detail
+matrix vv11aw = r(N), r(mean), r(sd), r(p10), r(p90)
+* Combinar matrices en una sola matriz
+matrix results = (vv21un \ vv21aw \ vv11un \ vv11aw)
+
+* Añadir nombres de filas y columnas
+matrix rownames results = "Vacancy/pop 2021" "Vacancy rate 2021" "Vacancy/pop 2011" "Vacancy rate 2011"
+matrix colnames results = "count" "mean" "sd" "p10" "p90"
+
+* Mostrar la matriz en formato de tabla
+matlist results, format(%9.2f)
+
+* Exportar la tabla a un archivo RTF
+esttab matrix(results, fmt(%9.3f)) using "$tables/descriptives_table_rates_ine.rtf", replace ///
+    cells("count mean sd min max") ///
+    title("Vacancy controlled by size of the municipality") ///
+    nonumbers nomtitles note("Data: INE")
+	
+*____________________________________________________________________
+
+summarize vac_pop [aw=poblacion] if poblacion > 5000 & año == 2021 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999", detail
+matrix vv21un = r(N), r(mean), r(sd), r(p10), r(p90)
+
+* Calcular vacancy rate para 2021, registro "ine", ponderado
+summarize vac_vtot [aw=poblacion] if poblacion > 5000 & año == 2021 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999", detail
+matrix vv21aw = r(N), r(mean), r(sd), r(p10), r(p90)
+
+* Calcular estadísticas para 2011, registro "ine", no ponderado
+summarize vac_pop [aw=poblacion] if poblacion > 5000 & año == 2011 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999", detail
+matrix vv11un = r(N), r(mean), r(sd), r(p10), r(p90)
+
+* Calcular estadísticas para 2011, registro "ine", ponderado
+summarize vac_vtot [aw=poblacion] if poblacion > 5000 & año == 2011 & registro == "ine" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999", detail
+matrix vv11aw = r(N), r(mean), r(sd), r(p10), r(p90)
 
 * Combinar matrices en una sola matriz
 matrix results = (vv21un \ vv21aw \ vv11un \ vv11aw)
 
 * Añadir nombres de filas y columnas
 matrix rownames results = "Vacancy/pop 2021" "Vacancy rate 2021" "Vacancy/pop 2011" "Vacancy rate 2011"
-matrix colnames results = "count" "mean" "sd" "min" "max"
+matrix colnames results = "count" "mean" "sd" "p10" "p90"
 
 * Mostrar la matriz en formato de tabla
 matlist results, format(%9.2f)
 
 * Exportar la tabla a un archivo RTF
-esttab matrix(results, fmt(%9.3f)) using "descriptives_table_rates_ine.rtf", replace ///
+esttab matrix(results, fmt(%9.3f)) using "$tables/descriptives_table_rates_ine_trimmedsample.rtf", replace ///
     cells("count mean sd min max") ///
-    title("Vacancy controlled by size of the municipality") ///
+    title("Vacancy controlled by size of the municipality. Trimmed sample: population > 5000") ///
     nonumbers nomtitles note("Data: INE")
+
 
 
 
@@ -197,7 +271,7 @@ foreach año in 2011 2021 {
 matlist results, format(%9.3f)
 
 * Exportar la tabla a un archivo RTF con formato de 3 decimales
-esttab matrix(results, fmt(%9.3f)) using "vivienda_vacía_por_segmento_vtot_s_pb.rtf", replace ///
+esttab matrix(results, fmt(%9.3f)) using "$tables/vivienda_vacía_por_segmento_vtot_s_pb.rtf", replace ///
     title("Vacancy rate for population segment, comparing Basque Country's results using INE or EUB data") ///
     nonumbers nomtitles note("Data: INE & EUV. Mean computed with analitical weights using population. Segments' codification: 1 if poblacion < 10000; 2 if 10000 < population < 25000; 3 if 25000 < population < 50000; 4 if 50000 < population < 75000; 5 if 75000 < population < 100000; 6 if 100000 < population < 175000; 7 if 175000 < population < 250000; 8 if  250000 < population < 500000; 9 if population > 500000")
 
@@ -266,7 +340,7 @@ foreach año in 2011 2021 {
 matlist results, format(%9.3f)
 
 * Exportar la tabla a un archivo RTF
-esttab matrix(results, fmt(%9.3f)) using "vivienda_vacía_por_segmento.rtf", replace ///
+esttab matrix(results, fmt(%9.3f)) using "$tables/vivienda_vacía_por_segmento.rtf", replace ///
     title("Percentage of vacancy for population segment") ///
     nonumbers nomtitles note("Data: INE & EUV. Segments' codification: 1 if poblacion < 10000; 2 if 10000 < population < 25000; 3 if 25000 < population < 50000; 4 if 50000 < population < 75000; 5 if 75000 < population < 100000; 6 if 100000 < population < 175000; 7 if 175000 < population < 250000; 8 if  250000 < population < 500000; 9 if population > 500000")
 	
@@ -341,7 +415,7 @@ foreach año in 2011 2021 {
 matlist results, format(%9.3f)
 
 * Exportar la tabla a un archivo RTF con formato de 3 decimales
-esttab matrix(results, fmt(%9.3f)) using "vivienda_vacía_por_segmento_vtot_s.rtf", replace ///
+esttab matrix(results, fmt(%9.3f)) using "$tables/vivienda_vacía_por_segmento_vtot_s.rtf", replace ///
     title("Vacancy rate for population segment") ///
     nonumbers nomtitles note("Data: INE & EUV. Mean computed with analitical weights using population. Segments' codification: 1 if poblacion < 10000; 2 if 10000 < population < 25000; 3 if 25000 < population < 50000; 4 if 50000 < population < 75000; 5 if 75000 < population < 100000; 6 if 100000 < population < 175000; 7 if 175000 < population < 250000; 8 if  250000 < population < 500000; 9 if population > 500000")
 
@@ -350,16 +424,25 @@ esttab matrix(results, fmt(%9.3f)) using "vivienda_vacía_por_segmento_vtot_s.rt
 
 **# GRPAFIQUES
 ////Agregada
-graph dot (mean) vac_vtot vac_pop [aw=poblacion] if año == 2011|2021 & (codi_regio >52 & substr(string(codi_regio), -3, 3) != "999" & codi_regio != .), over(año) over(registro) 
+
+graph dot (mean) vac_vtot vac_pop [aw=poblacion] if año == 2011|2021 & (codi_regio >52 & substr(string(codi_regio), -3, 3) != "999" & codi_regio != .), over(año) over(registro) scheme(white_w3d) marker(1, mcolor(blue))     legend(order(1 "Vacancy rate" 2 "Vacancy/population")) title("Weighted vacancy rate and vacancy/population ratios") subtitle("Using data for all Spain") note("Data: INE and EUV") 
 
 graph export "$figures\vacancies_spain_weighted.png", replace
 
+graph dot (mean) vac_vtot vac_pop if año == 2011|2021 & (codi_regio >52 & substr(string(codi_regio), -3, 3) != "999" & codi_regio != .), over(año) over(registro) scheme(white_w3d) marker(1, mcolor(blue)) legend(order(1 "Vacancy rate" 2 "Vacancy/population")) title("Unweighted vacancy rate and vacancy/population ratios") subtitle("Using data for all Spain") note("Data: INE and EUV") 
+
+graph export "$figures\vacancies_spain_unweighted.png", replace
+
 ////Agafant només el País Vasc, comparar dades de INE i EUV 
 
-
-graph dot (mean) vac_vtot vac_pop if (codi_regio >= 1000 & codi_regio < 1999 | codi_regio >= 20000 & codi_regio < 20999 | codi_regio >= 48000 & codi_regio < 48999) & (substr(string(codi_regio), -3, 3) != "999" & codi_regio != .) [aw=poblacion], over(año) over(registro)
+graph dot (mean) vac_vtot vac_pop [aw=poblacion] if (codi_regio >= 1000 & codi_regio < 1999 | codi_regio >= 20000 & codi_regio < 20999 | codi_regio >= 48000 & codi_regio < 48999) & (substr(string(codi_regio), -3, 3) != "999" & codi_regio != .), over(año) over(registro) scheme(white_w3d) marker(1, mcolor(blue)) legend(order(1 "Vacancy rate" 2 "Vacancy/population")) title("Weighted vacancy rate and vacancy/population ratios") subtitle("For Basque municipalities only") note("Data: INE and EUV") 
 
 graph export "$figures\vacancies_PB_weighted.png", replace
+
+graph dot (mean) vac_vtot vac_pop if (codi_regio >= 1000 & codi_regio < 1999 | codi_regio >= 20000 & codi_regio < 20999 | codi_regio >= 48000 & codi_regio < 48999) & (substr(string(codi_regio), -3, 3) != "999" & codi_regio != .), over(año) over(registro) scheme(white_w3d) marker(1, mcolor(blue))     legend(order(1 "Vacancy rate" 2 "Vacancy/population")) title("Unweighted vacancy rate and vacancy/population ratios") subtitle("For Basque municipalities only") note("Data: INE and EUV") 
+
+graph export "$figures\vacancies_PB_unweighted.png", replace
+
 
 //graph dot (mean) vac_11_21 viv_11_21 if año == 2011|2021 & codi_regio >52 & (registro == "ine" & ((año == 2011 & codi_regio == codi_regio[_n-1]) | (año == 2021 & codi_regio == codi_regio[_n-2]))) | registro == "euv", over(año) over(registro)
 
