@@ -52,7 +52,7 @@ la variable	viv_11_21		"Diferencia de viviendas totales entre 2011 y 2021"
 la variable	vac_11_21		"Diferencia de viviendas vacías entre 2011 y 2021"
 la variable	poblacio_11_21	"Diferencia de población entre 2011 y 2021"
 la variable	vac_vtot		"Vacancy rate"
-la variable	vac_pop			"vacancy controlado por población"
+la variable	vac_pop			"Vacancy/population"
 la variable poblacion				"population"
 
 **Generar variables de segmento poblacional
@@ -368,14 +368,14 @@ foreach año in 2011 2021 {
 levelsof segmento, local(segments)
 
 * Crear una matriz temporal para almacenar los resultados
-local rows = 4
+local rows = 2
 local cols = `: word count `segments''  // Número de segmentos
 local total_cols = `cols' + 1  // Número de segmentos más una columna para la media ponderada
 
 matrix results = J(`rows', `total_cols', .)
 
 * Añadir nombres de filas y columnas a la matriz
-matrix rownames results = "2011 INE" "2011 EUSTAT" "2021 INE" "2021 EUSTAT"
+matrix rownames results = "2011 INE" "2021 INE" 
 local colnames = ""
 foreach seg of local segments {
     local colnames = "`colnames' seg`seg'"
@@ -386,10 +386,9 @@ matrix colnames results = `colnames'
 * Llenar la matriz con los valores de vac_vtot_s
 local i = 1
 foreach año in 2011 2021 {
-    foreach registro in ine euv {
         local j = 1
         foreach seg of local segments {
-            summarize vac_vtot`año'_`registro'_s [aw=poblacion] if segmento == `seg'
+            summarize vac_vtot`año'_ine_s [aw=poblacion] if segmento == `seg' & registro == "ine"
             if r(N) > 0 {
                 matrix results[`i', `j'] = r(mean)
             } 
@@ -398,7 +397,7 @@ foreach año in 2011 2021 {
             }
             local j = `j' + 1
         }
-        summarize vac_vtot [aw=poblacion] if año == `año' & registro == "`registro'" & codi_regio > 52 & (substr(string(codi_regio), -3, 3) != "999") & codi_regio != .
+        summarize vac_vtot [aw=poblacion] if año == `año' & registro == "ine" & codi_regio > 52 & (substr(string(codi_regio), -3, 3) != "999") & codi_regio != .
         if r(N) > 0 {
             matrix results[`i', `total_cols'] = r(mean)
         } 
@@ -407,7 +406,7 @@ foreach año in 2011 2021 {
         }
         local i = `i' + 1
     }
-}
+
 
 * Mostrar la matriz en formato de tabla con 3 decimales
 matlist results, format(%9.3f)
@@ -415,7 +414,7 @@ matlist results, format(%9.3f)
 * Exportar la tabla a un archivo RTF con formato de 3 decimales
 esttab matrix(results, fmt(%9.3f)) using "$tables/vivienda_vacía_por_segmento_vtot_s.rtf", replace ///
     title("Vacancy rate for population segment") ///
-    nonumbers nomtitles note("Data: INE & EUSTAT. Mean computed with analytical weights using population. Segments' codification: 1 if population < 10000; 2 if 10000 < population < 25000; 3 if 25000 < population < 50000; 4 if 50000 < population < 100000; 5 if 100000 < population < 250000; 6 if 250000 < population < 500000; 8 if population > 500000")
+    nonumbers nomtitles note("Data: INE. Mean computed with analytical weights using population. Segments' codification: 1 if population < 10000; 2 if 10000 < population < 25000; 3 if 25000 < population < 50000; 4 if 50000 < population < 100000; 5 if 100000 < population < 250000; 6 if 250000 < population < 500000; 8 if population > 500000")
 
 
 *____________________________________________________________________
@@ -453,44 +452,49 @@ graph export "$figures\vacancies_PB_weighted_trimmedsample.png", replace
 
 ///FOR POPULATION SIZE________________________________________________________
 
-graph dot (mean) vac_vtot vac_pop if poblacion < 10000 & (año == 2011 | año == 2021) & (codi_regio >52) & registro == "ine" & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion],over(año) over(registro) title(población < 10000) name(graph1, replace)
+// Gráfico para población < 10000
+graph dot (mean) vac_vtot vac_pop if poblacion < 10000 & (año == 2011 | año == 2021) & (codi_regio >52) & registro == "ine" & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], over(año) over(registro) marker(1, mcolor(blue)) title("pop < 10000") name(graph1, replace) scheme(white_w3d) legend(order(1 "Vacancy rate" 2 "Vacancy/population")) leg(off)
 
-graph dot (mean) vac_vtot vac_pop if (poblacion > 10000 & poblacion < 25000) & (año == 2011 | año == 2021) & (codi_regio >52) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], over(año) over(registro) title(10000 < población < 25000) name(graph2, replace)
+// Gráfico para 10000 < población < 25000
+graph dot (mean) vac_vtot vac_pop if (poblacion > 10000 & poblacion < 25000) & (año == 2011 | año == 2021) & (codi_regio >52) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], over(año) over(registro) title("10000 < pop < 25000") name(graph2, replace) scheme(white_w3d) marker(1, mcolor(blue)) leg(off)
 
-graph dot (mean) vac_vtot vac_pop if (poblacion > 25000 & poblacion < 100000) & (año == 2011 | año == 2021) & (codi_regio >52) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], over(año) over(registro) title(25000 < población < 100000) name(graph3, replace)
+// Gráfico para 25000 < población < 100000
+graph dot (mean) vac_vtot vac_pop if (poblacion > 25000 & poblacion < 100000) & (año == 2011 | año == 2021) & (codi_regio >52) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], over(año) over(registro) title("25000 < pop < 100000") name(graph3, replace) scheme(white_w3d) marker(1, mcolor(blue)) leg(off)
 
-graph dot (mean) vac_vtot vac_pop if (poblacion > 100000 & poblacion < 250000) & (año == 2011 | año == 2021) & (codi_regio >52) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], over(año) over(registro) title(100000 < población < 250000) name(graph4, replace)
+// Gráfico para 100000 < población < 250000
+graph dot (mean) vac_vtot vac_pop if (poblacion > 100000 & poblacion < 250000) & (año == 2011 | año == 2021) & (codi_regio >52) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], over(año) over(registro) title("100000 < pop < 250000") name(graph4, replace) scheme(white_w3d) marker(1, mcolor(blue)) leg(off)
 
+// Gráfico para 250000 < población < 500000
+graph dot (mean) vac_vtot vac_pop if (poblacion > 250000 & poblacion < 500000) & (año == 2011 | año == 2021) & (codi_regio >52) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], over(año) over(registro) title("250000 < pop < 500000") name(graph5, replace) scheme(white_w3d) marker(1, mcolor(blue)) leg(off)
 
-graph dot (mean) vac_vtot vac_pop if (poblacion > 250000 & poblacion < 500000) & (año == 2011 | año == 2021) & (codi_regio >52) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], over(año) over(registro) title(250000 < población < 500000) name(graph5, replace)
+// Gráfico para población > 500000
+graph dot (mean) vac_vtot vac_pop if poblacion > 500000 & (año == 2011 | año == 2021) & (codi_regio > 52 & (substr(string(codi_regio), -3, 3) != "999")) & registro == "ine" [aw=poblacion], over(año) over(registro) title("500000 < pop") name(graph6, replace) scheme(white_w3d) marker(1, mcolor(blue)) leg(off)
 
-
-graph dot (mean) vac_vtot vac_pop if poblacion > 500000 & (año == 2011 | año == 2021) & (codi_regio > 52 & (substr(string(codi_regio), -3, 3) != "999")) & registro == "ine" [aw=poblacion], over(año) over(registro) title(500000 < población) name(graph6, replace)
-
-graph combine graph1 graph2 graph3 graph4 graph5 graph6, rows(3) cols(2)
+grc1leg2 graph1 graph2 graph3 graph4 graph5 graph6, rows(3) cols(2) name(combined, replace) scheme(white_w3d) title("Vacancy rate and vacancy/population rate") note("Data: INE & EUSTAT")
 
 graph export "$figures\GridPobl_ine-eustat.png", replace
 
 
 //By populaiton size taking only Basque Country data
 
-graph dot (mean) vac_vtot vac_pop if ((codi_regio >= 1000 & codi_regio < 1999) | (codi_regio >= 20000 & codi_regio < 20999) | (codi_regio >= 48000 & codi_regio < 48999)) & (año == 2011 | año == 2021) & (poblacion > 10000 & poblacion < 25000) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], over(año) over(registro) title(10000 < población < 25000) name(graph1, replace)
+graph dot (mean) vac_vtot vac_pop if ((codi_regio >= 1000 & codi_regio < 1999) | (codi_regio >= 20000 & codi_regio < 20999) | (codi_regio >= 48000 & codi_regio < 48999)) & (año == 2011 | año == 2021) & (poblacion > 10000 & poblacion < 25000) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], over(año) over(registro) title(10000 < población < 25000) name(graph1, replace) legend(order(1 "Vacancy rate" 2 "Vacancy/population")) marker(1, mcolor(blue)) leg(off) scheme(white_w3d)
 
-graph dot (mean) vac_vtot vac_pop if ((codi_regio >= 1000 & codi_regio < 1999) | (codi_regio >= 20000 & codi_regio < 20999) | (codi_regio >= 48000 & codi_regio < 48999)) & (año == 2011 | año == 2021) & (poblacion > 25000 & poblacion < 50000) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], over(año) over(registro) title(25000 < población < 50000) name(graph2, replace)
+graph dot (mean) vac_vtot vac_pop if ((codi_regio >= 1000 & codi_regio < 1999) | (codi_regio >= 20000 & codi_regio < 20999) | (codi_regio >= 48000 & codi_regio < 48999)) & (año == 2011 | año == 2021) & (poblacion > 25000 & poblacion < 50000) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], over(año) over(registro) title(25000 < población < 50000) name(graph2, replace) marker(1, mcolor(blue)) leg(off) scheme(white_w3d)
 
-graph dot (mean) vac_vtot vac_pop if ((codi_regio >= 1000 & codi_regio < 1999) | (codi_regio >= 20000 & codi_regio < 20999) | (codi_regio >= 48000 & codi_regio < 48999)) & (año == 2011 | año == 2021) & (poblacion > 50000 & poblacion < 100000) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], over(año) over(registro) title(50000 < población < 100000) name(graph3, replace) 
-
-
-graph dot (mean) vac_vtot vac_pop if ((codi_regio >= 1000 & codi_regio < 1999) | (codi_regio >= 20000 & codi_regio < 20999) | (codi_regio >= 48000 & codi_regio < 48999)) & (año == 2011 | año == 2021) & (poblacion > 100000) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], over(año) over(registro) title(poblacion > 100000) name(graph4, replace)
+graph dot (mean) vac_vtot vac_pop if ((codi_regio >= 1000 & codi_regio < 1999) | (codi_regio >= 20000 & codi_regio < 20999) | (codi_regio >= 48000 & codi_regio < 48999)) & (año == 2011 | año == 2021) & (poblacion > 50000 & poblacion < 100000) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], over(año) over(registro) title(50000 < población < 100000) name(graph3, replace) marker(1, mcolor(blue)) leg(off) scheme(white_w3d)
 
 
-graph combine graph1 graph2 graph3 graph4, rows(2) cols	(2) 
+graph dot (mean) vac_vtot vac_pop if ((codi_regio >= 1000 & codi_regio < 1999) | (codi_regio >= 20000 & codi_regio < 20999) | (codi_regio >= 48000 & codi_regio < 48999)) & (año == 2011 | año == 2021) & (poblacion > 100000) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], over(año) over(registro) title(poblacion > 100000) name(graph4, replace) marker(1, mcolor(blue)) leg(off) scheme(white_w3d)
+
+
+grc1leg2 graph1 graph2 graph3 graph4, rows(2) cols(2) scheme(white_w3d) title("Vacancy rate and vacancy/population rate") subtitle("Comparing Basque Country's results") note("Data: INE & EUSTAT")
 
 graph export "$figures\GridPoblPB_ine-eustat.png", replace
 
 
 *____________________________________________________________________
 ***********************************************************************************************************EN CONSTRUCCIÓ 
+**# Bookmark #1
 //Threshold quan vacancy es manté
 *Per a vacancy/població
 graph dot (mean) vac_vtot vac_pop if (poblacion > 20000 & poblacion < 27000) & (año == 2011 | año == 2021) & (codi_regio >52) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], over(año) over(registro) title(20000 < población < 27000) name(graph3, replace)
@@ -509,60 +513,30 @@ colorpalette tableau, nograph intensity(0.8)
 twoway (scatter vac_vtot poblacion if registro == "ine" & ((año == 2011) & (poblacion > 50000 & poblacion < 200000)) & (codi_regio >52) & (substr(string(codi_regio), -3, 3) != "999"), sort color(blue)) (scatter vac_vtot poblacion if registro == "ine" & ((año == 2021) & (poblacion > 50000 & poblacion < 200000)) & (codi_regio >52) & (substr(string(codi_regio), -3, 3) != "999"), sort color(red)) (lfit vac_vtot poblacion if registro == "ine" & ((año == 2011) & (poblacion > 50000 & poblacion < 200000)) & (codi_regio >52) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], color(navy)) (lfit vac_vtot poblacion if registro == "ine" & ((año == 2021) & (poblacion > 50000 & poblacion < 200000)) & (codi_regio >52) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], color("cranberry")), legend(order(1 "2011" 2 "2021" 3 "fitted 2011" 4 "fitted 2021") pos(1) ring(0)) ytitle("vacancy rate") scheme(white_w3d) name(graph5, replace) note("Data: INE and EUSTAT") 
 
 
-/*
-twoway (scatter vac_vtot poblacion if registro == "ine" & ((año == 2011) & (poblacion > 50000 & poblacion < 200000)) & (codi_regio >52) & (substr(string(codi_regio), -3, 3) != "999"), sort color(blue)) (scatter vac_vtot poblacion if registro == "ine" & ((año == 2021) & (poblacion > 50000 & poblacion < 200000)) & (codi_regio >52) & (substr(string(codi_regio), -3, 3) != "999"), sort color(red)) (fpfit vac_vtot poblacion if registro == "ine" & ((año == 2011) & (poblacion > 50000 & poblacion < 200000)) & (codi_regio >52) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], color(navy)) (fpfit vac_vtot poblacion if registro == "ine" & ((año == 2021) & (poblacion > 50000 & poblacion < 200000)) & (codi_regio >52) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], color("cranberry")), legend(order(1 "2011" 2 "2021" 3 "fitted 2011" 4 "fitted 2021") pos(1) ring(0)) ytitle("vacancy rate") scheme(white_w3d)
-
-*/
 graph export "$figures\ccaa_vacrate.png", replace
 
-///COMENTARI Veiem com el pendent de la línia de tendència baixa, perquè als municipis més poblats ha baixat més la vacancy.
 
-*____________________________________________________________________
-*EN CONSTRUCCIÓ
-***Gràfic amb la diferència 
-*ARREGLAR-LOS PER A PODER FER EL GRID
-twoway (scatter vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion < 10000)) & (substr(string(codi_regio), -3, 3) != "999"), sort) (lfit vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion < 10000)) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion]), legend(order(1 "2021-2011" 2 "fitted 2021-2011") pos(1) ring(0)) ytitle("Diferencia de viviendas vacías entre 2011 y 2021") title(población < 10000) name(graph1, replace)
-
-twoway (scatter vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion > 10000 & poblacion < 25000) & (substr(string(codi_regio), -3, 3) != "999")), sort) (lfit vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion > 10000 & poblacion < 25000)) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion]), legend(order(1 "2021-2011" 2 "fitted 2021-2011") pos(1) ring(0)) ytitle("Diferencia de viviendas vacías entre 2011 y 2021") title(población < 10000) name(graph1, replace) title(10000 < población < 25000) name(graph2, replace)
-
-twoway (scatter vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion > 25000 & poblacion < 100000)) & (substr(string(codi_regio), -3, 3) != "999"), sort) (lfit vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion > 25000 & poblacion < 100000))& (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion]), legend(order(1 "2021-2011" 2 "fitted 2021-2011") pos(1) ring(0)) ytitle("Diferencia de viviendas vacías entre 2011 y 2021") title(población < 10000) name(graph1, replace) title(25000 < población < 100000) name(graph3, replace)
-
-twoway (scatter vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion > 100000 & poblacion < 250000)) & (substr(string(codi_regio), -3, 3) != "999"), sort) (lfit vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion > 100000 & poblacion < 250000)) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion]), legend(order(1 "2021-2011" 2 "fitted 2021-2011") pos(1) ring(0)) ytitle("Diferencia de viviendas vacías entre 2011 y 2021") title(población < 10000) name(graph1, replace) title(100000 < población < 250000) name(graph4, replace)
-
-twoway (scatter vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion > 250000 & poblacion < 500000)) & (substr(string(codi_regio), -3, 3) != "999"), sort) (lfit vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion > 250000 & poblacion < 500000)) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion]), legend(order(1 "2021-2011" 2 "fitted 2021-2011") pos(1) ring(0)) ytitle("Diferencia de viviendas vacías entre 2011 y 2021") title(población < 10000) name(graph1, replace)title(250000 < población < 500000) name(graph5, replace)
-
-twoway (scatter vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion > 500000)) & (substr(string(codi_regio), -3, 3) != "999"), sort) (lfit vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion > 500000)) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion]), legend(order(1 "2021-2011" 2 "fitted 2021-2011") pos(1) ring(0)) ytitle("Diferencia de viviendas vacías entre 2011 y 2021") title(población < 10000) name(graph1, replace)title(500000 < población) name(graph6, replace)
-
-graph combine graph1 graph2 graph3 graph4 graph5 graph6, rows(3) cols(2)
-
-graph export "$figures\Dif_pob_viv_scatter_grid.png", replace
-
-
-*____________________________________________________________________
-
-
-///COMENTARI: sembla que la relació no és gaire forta i a més és la contrària a l'esperada: si la població va a centres més poblats i allà la vivenda buida es redueix hauriem de veure una línia descendent, no és el cas. El que sí que veiem és que la vivenda buida s'ha reduit, perquè la tendència es troba sempre en valros negatius, però s'ha reduit més en municipis on s'ha reduit més la poblacio
-
-twoway (scatter vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion > 50000 & poblacion < 500000)) & (substr(string(codi_regio), -3, 3) != "999"), sort) (lfit vac_11_21_ine poblacio_11_21 if registro == "ine" & ((año == 2021) & (poblacion > 50000 & poblacion < 500000)) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion]), legend(order(1 "2021-2011" 2 "fitted 2021-2011") pos(1) ring(0)) ytitle("Diferencia de viviendas vacías entre 2011 y 2021")
-
-graph export "$figures\Dif_pob_viv_scatter.png", replace
-
-
+**# By territory
 
 ****************Graphs over territory******************
 
-graph dot (mean) vac_vtot if registro == "ine" & ((año == 2011) & (poblacion > 50000 & poblacion < 200000)) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], o(com_autonoma, sort(1)) name(ccaa1, replace)
+graph dot (mean) vac_vtot if registro == "ine" & ((año == 2011)) & (substr(string(codi_regio), -3, 3) != "999")  & (codi_regio >52) & codi_regio != . [aw=poblacion], o(com_autonoma, sort(1)) name(ccaa1, replace) scheme(white_w3d) title("2011") leg(off) ytitle("")
 
-graph dot (mean) vac_vtot if registro == "ine" & ((año == 2021) & (poblacion > 50000 & poblacion < 200000)) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], o(com_autonoma, sort(1)) marker(1, mcolor(red)) name(ccaa2, replace)
+graph dot (mean) vac_vtot if registro == "ine" & ((año == 2021)) & (substr(string(codi_regio), -3, 3) != "999")  & (codi_regio >52) & codi_regio != . [aw=poblacion], o(com_autonoma, sort(1)) marker(1, mcolor(red)) name(ccaa2, replace) scheme(white_w3d) title("2021") leg(off) ytitle("")
 
-graph box vac_vtot if registro == "ine" & ((año == 2011) & (poblacion > 50000 & poblacion < 200000)) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], o(com_autonoma, sort(1)) 
+//graph box vac_vtot if registro == "ine" & ((año == 2011) & (poblacion > 50000 & poblacion < 200000)) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], o(com_autonoma, sort(1)) scheme(white_w3d)
 
-graph box (mean) vac_vtot if registro == "ine" & ((año == 2021) & (poblacion > 50000 & poblacion < 200000)) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], o(com_autonoma, sort(1)) marker(1, mcolor(red)) 
+//graph box (mean) vac_vtot if registro == "ine" & ((año == 2021) & (poblacion > 50000 & poblacion < 200000)) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], o(com_autonoma, sort(1)) marker(1, mcolor(red)) scheme(white_w3d)
 
 
-graph combine ccaa1 ccaa2, rows(1)
+graph combine ccaa1 ccaa2, rows(1) scheme(white_w3d) title("Vacancy rate by Autonomous Comunity") note("Data: INE.") 
 
 graph export "$figures\ccaa_viv_ordered_grid.png", replace
+
+
+*____________________________________________________________________EN CONSTRUCCIÓ
+graph dot (mean) vac_vtot if registro == "ine" & ((año == 2011)) & (substr(string(codi_regio), -3, 3) != "999")  & (codi_regio >52) & codi_regio < 25999 & codi_regio != . [aw=poblacion], o(provincia, sort(1))  name(ccaa1, replace) scheme(white_w3d) title("2011") leg(off) ytitle("")
+
 
 
 
