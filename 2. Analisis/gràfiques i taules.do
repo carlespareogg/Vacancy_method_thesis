@@ -270,12 +270,168 @@ matlist results, format(%9.3f)
 
 * Exportar la tabla a un archivo RTF con formato de 3 decimales
 esttab matrix(results, fmt(%9.3f)) using "$tables/vivienda_vacía_por_segmento_vtot_s_pb.rtf", replace ///
-    title("Vacancy rate for population segment, comparing Basque Country's results using INE or EUB data") ///
+    title("Vacancy rate for population segment, comparing Basque Country's results using INE or EUSTAT data") ///
     nonumbers nomtitles note("Data: INE & EUSTAT. Mean computed with analytical weights using population. Segments' codification: 1 if population < 10000; 2 if 10000 < population < 25000; 3 if 25000 < population < 50000; 4 if 50000 < population < 100000; 5 if 100000 < population < 250000; 6 if 250000 < population < 500000; 7 if population > 500000")
 
+******************************************************************************************************************************************************************************************************************************************
+**# Methodology EUSTAT-INE. % of vacancy/populaiton in every population segment
+
+foreach año in 2011 2021 {
+    foreach registro in ine euv {
+        display "Procesando año: `año', registro: `registro'"
+
+        // Calcular el total de viviendas vacías por segmento de población
+		////Calculado en la anterior tabla
+
+        // Calcular total de poblacion por año y registro
+        bysort segmento: egen pop`año'_`registro'_s_pb = total(poblacion) if (año == `año' & registro == "`registro'" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999") & codi_regio != . & ((codi_regio >= 1000 & codi_regio < 1999) | (codi_regio >= 20000 & codi_regio < 20999) | (codi_regio >= 48000 & codi_regio < 48999)) & poblacion > 10000
+
+        // Calcular la ratio de viviendas/poblacion de cada segmento de población por año y registro
+        bysort segmento: gen vac_pop`año'_`registro'_s_pb = vac_tot`año'_`registro'_s_pb / pop`año'_`registro'_s_pb if (año == `año' & registro == "`registro'" & codi_regio > 52 & substr(string(codi_regio), -3, 3) != "999") & codi_regio != . & ((codi_regio >= 1000 & codi_regio < 1999) | (codi_regio >= 20000 & codi_regio < 20999) | (codi_regio >= 48000 & codi_regio < 48999)) & poblacion > 10000
+    }
+}
+
+
+* Crear una lista de segmentos
+levelsof segmento, local(segments)
+
+* Crear una matriz temporal para almacenar los resultados
+local rows = 4
+local cols = `: word count `segments''  // Número de segmentos
+local total_cols = `cols' + 1  // Número de segmentos más una columna para la media ponderada
+
+matrix results = J(`rows', `total_cols', .)
+
+* Añadir nombres de filas y columnas a la matriz
+matrix rownames results = "2011 INE" "2011 EUSTAT" "2021 INE" "2021 EUSTAT"
+local colnames = ""
+foreach seg of local segments {
+    local colnames = "`colnames' seg`seg'"
+}
+local colnames = "`colnames' mean"  // Añadir columna media
+matrix colnames results = `colnames'
+
+* Llenar la matriz con los valores de vac_vtot_s
+local i = 1
+foreach año in 2011 2021 {
+    foreach registro in ine euv {
+        local j = 1
+        foreach seg of local segments {
+            summarize vac_pop`año'_`registro'_s_pb [aw=poblacion] if segmento == `seg'
+            if r(N) > 0 {
+                matrix results[`i', `j'] = r(mean)
+            } 
+			else {
+                matrix results[`i', `j'] = 0
+            }
+            local j = `j' + 1
+        }
+        summarize vac_pop [aw=poblacion] if año == `año' & registro == "`registro'" & codi_regio > 52 & (substr(string(codi_regio), -3, 3) != "999") & codi_regio != . & ((codi_regio >= 1000 & codi_regio < 1999) | (codi_regio >= 20000 & codi_regio < 20999) | (codi_regio >= 48000 & codi_regio < 48999))
+        if r(N) > 0 {
+            matrix results[`i', `total_cols'] = r(mean)
+        } 
+		else {
+            matrix results[`i', `total_cols'] = 0
+        }
+        local i = `i' + 1
+    }
+}
+
+* Mostrar la matriz en formato de tabla con 3 decimales
+matlist results, format(%9.3f)
+
+* Exportar la tabla a un archivo RTF con formato de 3 decimales
+esttab matrix(results, fmt(%9.3f)) using "$tables/vivienda_vacía_por_segmento_pop_s_pb.rtf", replace ///
+    title("Vacancy/population for population segment, comparing Basque Country's results using INE or EUSTAT data") ///
+    nonumbers nomtitles note("Data: INE & EUSTAT. Mean computed with analytical weights using population. Segments' codification: 1 if population < 10000; 2 if 10000 < population < 25000; 3 if 25000 < population < 50000; 4 if 50000 < population < 100000; 5 if 100000 < population < 250000; 6 if 250000 < population < 500000; 7 if population > 500000")
+
+	
+******************************************************************************************************************************************************************************************************************************************
+
+**# Ratio of weighted difference by segments
+// Extract values for each registro and year
+
+// Reshape the data to wide format to have all necessary values in the same observation
+preserve
+
+bysort segmento: egen vac_pop2011_ine = mean(vac_pop2011_ine_s_pb)
+bysort segmento: egen vac_pop2021_ine = mean(vac_pop2021_ine_s_pb)
+bysort segmento: egen vac_pop2011_euv = mean(vac_pop2011_euv_s_pb)
+bysort segmento: egen vac_pop2021_euv = mean(vac_pop2021_euv_s_pb)
+duplicates drop vac_pop2011_ine, force
+duplicates drop vac_pop2021_ine, force
+duplicates drop vac_pop2011_euv, force
+duplicates drop vac_pop2011_euv, force
+
+
+keep registro segmento vac_pop2011_ine vac_pop2021_ine vac_pop2011_euv vac_pop2021_euv
+reshape wide vac_pop2011_ine vac_pop2021_ine vac_pop2011_euv vac_pop2021_euv, i(segmento) j(registro, string)
+
+// Calculate the ratios
+gen ine_s_pb_21_11 = (vac_pop2021_ine - vac_pop2011_ine) / vac_pop2011_ine
+gen euv_s_pb_21_11 = (vac_pop2021_euv - vac_pop2011_euv) / vac_pop2011_euv
+
+// Compute the final ratio_method
+gen ratio_method = ine_s_pb_21_11 / euv_s_pb_21_11
+
+// Verify the results
+list segmento ine_s_pb_21_11 euv_s_pb_21_11 ratio_method if !missing(ratio_method) 
+
+save "$dataoutput/ratio_method.dta", replace
 
 
 
+* Crear una lista de segmentos
+levelsof segmento, local(segments)
+
+* Crear una matriz temporal para almacenar los resultados
+local rows = 1
+local cols = `: word count `segments''  // Número de segmentos
+local total_cols = `cols' + 1  // Número de segmentos más una columna para la media ponderada
+
+matrix results = J(`rows', `total_cols', .)
+
+* Añadir nombres de filas y columnas a la matriz
+matrix rownames results = "r"
+local colnames = ""
+foreach seg of local segments {
+    local colnames = "`colnames' seg`seg'"
+}
+local colnames = "`colnames' mean"  // Añadir columna media
+matrix colnames results = `colnames'
+
+* Llenar la matriz con los valores de vac_vtot_s
+local i = 1
+        local j = 1
+        foreach seg of local segments {
+            summarize ratio_method if segmento == `seg'
+            if r(N) > 0 {
+                matrix results[`i', `j'] = r(mean)
+            } 
+			else {
+                matrix results[`i', `j'] = 0
+            }
+            local j = `j' + 1
+        }
+        summarize ratio_method  
+        if r(N) > 0 {
+            matrix results[`i', `total_cols'] = r(mean)
+        } 
+		else {
+            matrix results[`i', `total_cols'] = 0
+        }
+        local i = `i' + 1
+    
+
+* Mostrar la matriz en formato de tabla con 3 decimales
+matlist results, format(%9.3f)
+
+* Exportar la tabla a un archivo RTF con formato de 3 decimales
+esttab matrix(results, fmt(%9.3f)) using "$tables/ratio_dif_ine_eustat_s_pb.rtf", replace ///
+    title("Ratio of weighted differences between INE and EUSTAT results") ///
+    nonumbers nomtitles note("Data: INE & EUSTAT. Mean computed with analytical weights using population. Segments' codification: 1 if population < 10000; 2 if 10000 < population < 25000; 3 if 25000 < population < 50000; 4 if 50000 < population < 100000; 5 if 100000 < population < 250000; 6 if 250000 < population < 500000; 7 if population > 500000")
+
+restore
 
 ******************************************************************************************************************************************************************************************************************************************
 **# % of vacancy by population segment
