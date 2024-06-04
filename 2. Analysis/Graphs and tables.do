@@ -496,7 +496,7 @@ matlist results, format(%9.3f)
 * Exportar la tabla a un archivo RTF
 esttab matrix(results, fmt(%9.3f)) using "$tables/vivienda_vacía_por_segmento.rtf", replace ///
     title("Percentage of vacancy for population segment") ///
-    nonumbers nomtitles note("Data: INE & EUSTAT. Segments' codification: 1 if population < 10000; 2 if 10000 < population < 25000; 3 if 25000 < population < 50000; 4 if 50000 < population < 100000; 5 if 100000 < population < 250000; 6 if 250000 < population < 500000; 8 if population > 500000")
+    nonumbers nomtitles note("Data: INE & EUSTAT. Segments' codification: 1 if population < 10000; 2 if 10000 < population < 25000; 3 if 25000 < population < 50000; 4 if 50000 < population < 100000; 5 if 100000 < population < 250000; 6 if 250000 < population < 500000; 7 if population > 500000")
 	
 	
 
@@ -570,7 +570,7 @@ matlist results, format(%9.3f)
 * Exportar la tabla a un archivo RTF con formato de 3 decimales
 esttab matrix(results, fmt(%9.3f)) using "$tables/vivienda_vacía_por_segmento_vtot_s.rtf", replace ///
     title("Vacancy rate for population segment") ///
-    nonumbers nomtitles note("Data: INE. Mean computed with analytical weights using population. Segments' codification: 1 if population < 10000; 2 if 10000 < population < 25000; 3 if 25000 < population < 50000; 4 if 50000 < population < 100000; 5 if 100000 < population < 250000; 6 if 250000 < population < 500000; 8 if population > 500000")
+    nonumbers nomtitles note("Data: INE. Mean computed with analytical weights using population. Segments' codification: 1 if population < 10000; 2 if 10000 < population < 25000; 3 if 25000 < population < 50000; 4 if 50000 < population < 100000; 5 if 100000 < population < 250000; 6 if 250000 < population < 500000; 7 if population > 500000")
 
 
 *____________________________________________________________________
