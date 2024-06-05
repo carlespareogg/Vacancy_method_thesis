@@ -690,6 +690,55 @@ graph combine ccaa1 ccaa2, rows(1) scheme(white_w3d) title("Vacancy rate by Auto
 graph export "$figures\ccaa_viv_ordered_grid.png", replace
 
 
+*****************Graph provincias**********************
+
+gen urban_rural = "urban"
+replace urban_rural = "rural" if inlist(provincia, "Salamanca", "Soria", "Huelva", "Cuenca", "Huesca", "Zamora", "Cáceres")
+replace urban_rural = "rural" if inlist(provincia, "Palencia", "Ávila", "Segovia", "Guadalajara", "Ciudad Real", "Burgos", "Albacete", "Leon", "Badajoz")
+replace urban_rural = "rural" if inlist(provincia, "Lugo", "Lleida", "Ourense", "Jaén", "Toledo", "Huelva")
+replace urban_rural = "rural" if inlist(provincia, "Cordoba", "Zaragoza", "La Rioja", "Valladolid")
+
+*Casos específicos de Galicia y Castilla y León*
+graph dot (mean) vac_vtot if registro == "ine" & (año == 2011) & (com_autonoma == "Galicia") & (poblacion > 50000 & poblacion < 200000) & (substr(string(codi_regio), -5, 5) != "999") [aw=poblacion], ///
+    o(provincia, sort(1)) marker(1, mcolor(red)) name(prov1_2011, replace) title("Galicia 2011") scheme(white_w3d)
+graph dot (mean) vac_vtot if registro == "ine" & (año == 2021) & (com_autonoma == "Galicia") & (poblacion > 50000 & poblacion < 200000) & (substr(string(codi_regio), -5, 5) != "999") [aw=poblacion], ///
+    o(provincia, sort(1)) marker(1, mcolor(red)) name(prov1_2021, replace) title("Galicia 2021") scheme(white_w3d)
+
+graph dot (mean) vac_vtot if registro == "ine" & (año == 2011) & (com_autonoma == "CyL")  & (poblacion > 50000 & poblacion < 200000) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], ///
+    o(provincia, sort(1)) marker(1, mcolor(red)) name(prov1_2011, replace) title("Provincias de Castilla y León 2011") scheme(white_w3d) 
+
+*Casos específicos de País Vasco*
+graph dot (mean) vac_vtot if registro == "ine" & (año == 2011) & (com_autonoma == "Euskadi") & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], ///
+    o(provincia, sort(1)) marker(1, mcolor(red)) name(prov1_2011, replace) title("Provincias de Euskadi 2011 INE") scheme(white_w3d) 
+graph dot (mean) vac_vtot if registro == "euv" & (año == 2011) & (com_autonoma == "Euskadi") & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], ///
+    o(provincia, sort(1)) marker(1, mcolor(red)) name(prov1_2011, replace) title("Provincias de Euskadi 2011 EUSTAT") scheme(white_w3d) 
+graph dot (mean) vac_vtot if registro == "ine" & (año == 2021) & (com_autonoma == "Euskadi") & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], ///
+    o(provincia, sort(1)) marker(1, mcolor(red)) name(prov1_2021, replace) title("Provincias de Euskadi 2021 INE") scheme(white_w3d) 
+graph dot (mean) vac_vtot if registro == "euv" & (año == 2021) & (com_autonoma == "Euskadi")  & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], ///
+    o(provincia, sort(1)) marker(1, mcolor(red)) name(prov1_2021, replace) title("Provincias de Euskadi 2021 EUSTAT") scheme(white_w3d) 
+
+*URBAN (más densamente pobladas)
+
+graph dot (mean) vac_vtot if registro == "ine" & (año == 2011) & (urban_rural == "urban") & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], ///
+    o(provincia, sort(1)) marker(1, mcolor(red)) name(prov1_2011, replace) title("Provincias más densamente pobladas año 2011") scheme(white_w3d)
+
+graph dot (mean) vac_vtot if registro == "ine" & (año == 2021) & (urban_rural == "urban") & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], ///
+    o(provincia, sort(1)) marker(1, mcolor(red)) name(prov1_2021, replace) title("Provincias más densamente pobladas año 2021") scheme(white_w3d)
+
+
+*RURAL (menos densamente pobladas)
+
+graph dot (mean) vac_vtot if registro == "ine" & (año == 2011) & (urban_rural == "rural") & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], ///
+    o(provincia, sort(1)) marker(1, mcolor(red)) name(prov1_2011, replace) title("Provincias menos densamente pobladas año 2011") scheme(white_w3d)
+	
+graph dot (mean) vac_vtot if registro == "ine" & (año == 2021) & (urban_rural == "rural") & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], ///
+    o(provincia, sort(1)) marker(1, mcolor(red)) name(prov1_2021, replace) title("Provincias menos densamente pobladas año 2021") scheme(white_w3d)
+
+
+
+
+
+
 *____________________________________________________________________EN CONSTRUCCIÓ
 graph dot (mean) vac_vtot if registro == "ine" & ((año == 2011)) & (substr(string(codi_regio), -3, 3) != "999")  & (codi_regio >52) & codi_regio < 25999 & codi_regio != . [aw=poblacion], o(provincia, sort(1))  name(ccaa1, replace) scheme(white_w3d) title("2011") leg(off) ytitle("")
 
