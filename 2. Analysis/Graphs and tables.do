@@ -648,17 +648,7 @@ grc1leg2 graph1 graph2 graph3 graph4, rows(2) cols(2) scheme(white_w3d) title("V
 graph export "$figures\GridPoblPB_ine-eustat.png", replace
 
 
-*____________________________________________________________________
-***********************************************************************************************************EN CONSTRUCCIÓ 
-**# Bookmark #1
-//Threshold quan vacancy es manté
-*Per a vacancy/població
-graph dot (mean) vac_vtot vac_pop if (poblacion > 20000 & poblacion < 27000) & (año == 2011 | año == 2021) & (codi_regio >52) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], over(año) over(registro) title(20000 < población < 27000) name(graph3, replace)
-
-*Per a vacancy rate
-graph dot (mean) vac_vtot vac_pop if (poblacion > 6000 & poblacion < 10000) & (año == 2011 | año == 2021) & (codi_regio >52) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], over(año) over(registro) title(6000 < población < 10000) name(graph3, replace)
-
-**# Scatterplots
+**# Scatterplot
 
 ************************Scatter plolts************************
 
@@ -676,71 +666,37 @@ graph export "$figures\ccaa_vacrate.png", replace
 
 ****************Graphs over territory******************
 
-graph dot (mean) vac_vtot if registro == "ine" & ((año == 2011)) & (substr(string(codi_regio), -3, 3) != "999")  & (codi_regio >52) & codi_regio != . [aw=poblacion], o(com_autonoma, sort(1)) name(ccaa1, replace) scheme(white_w3d) title("2011") leg(off) ytitle("")
+graph dot (mean) vac_vtot if registro == "ine" & ((año == 2011)) & (substr(string(codi_regio), -3, 3) != "999")  & (codi_regio >52) & codi_regio != . [aw=poblacion], o(com_autonoma, sort(1)) name(ccaa1, replace) scheme(white_w3d) title("2011") leg(off) ytitle("") legend(order(1 "Vacancy rate"))
 
 graph dot (mean) vac_vtot if registro == "ine" & ((año == 2021)) & (substr(string(codi_regio), -3, 3) != "999")  & (codi_regio >52) & codi_regio != . [aw=poblacion], o(com_autonoma, sort(1)) marker(1, mcolor(red)) name(ccaa2, replace) scheme(white_w3d) title("2021") leg(off) ytitle("")
 
-//graph box vac_vtot if registro == "ine" & ((año == 2011) & (poblacion > 50000 & poblacion < 200000)) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], o(com_autonoma, sort(1)) scheme(white_w3d)
 
-//graph box (mean) vac_vtot if registro == "ine" & ((año == 2021) & (poblacion > 50000 & poblacion < 200000)) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], o(com_autonoma, sort(1)) marker(1, mcolor(red)) scheme(white_w3d)
-
-
-graph combine ccaa1 ccaa2, rows(1) scheme(white_w3d) title("Vacancy rate by Autonomous Comunity") note("Data: INE.") 
+grc1leg2 ccaa1 ccaa2, rows(1) scheme(white_w3d) note("Data: INE. Own production.") 
 
 graph export "$figures\ccaa_viv_ordered_grid.png", replace
 
 
 *****************Graph provincias**********************
 
-gen urban_rural = "urban"
-replace urban_rural = "rural" if inlist(provincia, "Salamanca", "Soria", "Huelva", "Cuenca", "Huesca", "Zamora", "Cáceres")
-replace urban_rural = "rural" if inlist(provincia, "Palencia", "Ávila", "Segovia", "Guadalajara", "Ciudad Real", "Burgos", "Albacete", "Leon", "Badajoz")
-replace urban_rural = "rural" if inlist(provincia, "Lugo", "Lleida", "Ourense", "Jaén", "Toledo", "Huelva")
-replace urban_rural = "rural" if inlist(provincia, "Cordoba", "Zaragoza", "La Rioja", "Valladolid")
-
-*Casos específicos de Galicia y Castilla y León*
-graph dot (mean) vac_vtot if registro == "ine" & (año == 2011) & (com_autonoma == "Galicia") & (poblacion > 50000 & poblacion < 200000) & (substr(string(codi_regio), -5, 5) != "999") [aw=poblacion], ///
-    o(provincia, sort(1)) marker(1, mcolor(red)) name(prov1_2011, replace) title("Galicia 2011") scheme(white_w3d)
-graph dot (mean) vac_vtot if registro == "ine" & (año == 2021) & (com_autonoma == "Galicia") & (poblacion > 50000 & poblacion < 200000) & (substr(string(codi_regio), -5, 5) != "999") [aw=poblacion], ///
-    o(provincia, sort(1)) marker(1, mcolor(red)) name(prov1_2021, replace) title("Galicia 2021") scheme(white_w3d)
-
-graph dot (mean) vac_vtot if registro == "ine" & (año == 2011) & (com_autonoma == "CyL")  & (poblacion > 50000 & poblacion < 200000) & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], ///
-    o(provincia, sort(1)) marker(1, mcolor(red)) name(prov1_2011, replace) title("Provincias de Castilla y León 2011") scheme(white_w3d) 
-
 *Casos específicos de País Vasco*
 graph dot (mean) vac_vtot if registro == "ine" & (año == 2011) & (com_autonoma == "Euskadi") & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], ///
-    o(provincia, sort(1)) marker(1, mcolor(red)) name(prov1_2011, replace) title("Provincias de Euskadi 2011 INE") scheme(white_w3d) 
-graph dot (mean) vac_vtot if registro == "euv" & (año == 2011) & (com_autonoma == "Euskadi") & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], ///
-    o(provincia, sort(1)) marker(1, mcolor(red)) name(prov1_2011, replace) title("Provincias de Euskadi 2011 EUSTAT") scheme(white_w3d) 
-graph dot (mean) vac_vtot if registro == "ine" & (año == 2021) & (com_autonoma == "Euskadi") & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], ///
-    o(provincia, sort(1)) marker(1, mcolor(red)) name(prov1_2021, replace) title("Provincias de Euskadi 2021 INE") scheme(white_w3d) 
-graph dot (mean) vac_vtot if registro == "euv" & (año == 2021) & (com_autonoma == "Euskadi")  & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], ///
-    o(provincia, sort(1)) marker(1, mcolor(red)) name(prov1_2021, replace) title("Provincias de Euskadi 2021 EUSTAT") scheme(white_w3d) 
-
-*URBAN (más densamente pobladas)
-
-graph dot (mean) vac_vtot if registro == "ine" & (año == 2011) & (urban_rural == "urban") & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], ///
-    o(provincia, sort(1)) marker(1, mcolor(red)) name(prov1_2011, replace) title("Provincias más densamente pobladas año 2011") scheme(white_w3d)
-
-graph dot (mean) vac_vtot if registro == "ine" & (año == 2021) & (urban_rural == "urban") & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], ///
-    o(provincia, sort(1)) marker(1, mcolor(red)) name(prov1_2021, replace) title("Provincias más densamente pobladas año 2021") scheme(white_w3d)
-
-
-*RURAL (menos densamente pobladas)
-
-graph dot (mean) vac_vtot if registro == "ine" & (año == 2011) & (urban_rural == "rural") & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], ///
-    o(provincia, sort(1)) marker(1, mcolor(red)) name(prov1_2011, replace) title("Provincias menos densamente pobladas año 2011") scheme(white_w3d)
+    o(provincia, sort(1)) marker(1, mcolor(red)) name(prov1_2011, replace) title("INE 2011") scheme(white_w3d) legend("mean of vacancy rate") leg(off)
 	
-graph dot (mean) vac_vtot if registro == "ine" & (año == 2021) & (urban_rural == "rural") & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], ///
-    o(provincia, sort(1)) marker(1, mcolor(red)) name(prov1_2021, replace) title("Provincias menos densamente pobladas año 2021") scheme(white_w3d)
+graph dot (mean) vac_vtot if registro == "euv" & (año == 2011) & (com_autonoma == "Euskadi") & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], ///
+    o(provincia, sort(1)) marker(1, mcolor(red)) name(prov2_2011, replace) title("EUSTAT 2011") scheme(white_w3d) leg(off)
+	
+graph dot (mean) vac_vtot if registro == "ine" & (año == 2021) & (com_autonoma == "Euskadi") & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], ///
+    o(provincia, sort(1)) marker(1, mcolor(red)) name(prov1_2021, replace) title("INE 2021") scheme(white_w3d) leg(off)
+	
+graph dot (mean) vac_vtot if registro == "euv" & (año == 2021) & (com_autonoma == "Euskadi")  & (substr(string(codi_regio), -3, 3) != "999") [aw=poblacion], ///
+    o(provincia, sort(1)) marker(1, mcolor(red)) name(prov2_2021, replace) title("EUSTAT 2021") scheme(white_w3d) 
+	
+grc1leg2 prov1_2011 prov2_2011 prov1_2021 prov2_2021, rows(2) cols(2) scheme(white_w3d)  note("Data: INE & EUSTAT. Own production.")
 
+graph export "$figures\vac_rate_PBprov.png", replace
 
+	
 
-
-
-
-*____________________________________________________________________EN CONSTRUCCIÓ
-graph dot (mean) vac_vtot if registro == "ine" & ((año == 2011)) & (substr(string(codi_regio), -3, 3) != "999")  & (codi_regio >52) & codi_regio < 25999 & codi_regio != . [aw=poblacion], o(provincia, sort(1))  name(ccaa1, replace) scheme(white_w3d) title("2011") leg(off) ytitle("")
 
 
 
